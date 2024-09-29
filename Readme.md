@@ -1,4 +1,5 @@
 # EC2 Auto Shutdown and Start
+![](./.docs/image.png)
 
 As a software engineering team, we are working with Amazon EC2 instances on a daily basis While EC2 instances are great for running applications and services but its important to properly manage our instances to avoid unnecessary costs and resource consumption. One way to do this is by automating the shutdown and start of your EC2 instances
 
@@ -11,7 +12,30 @@ The project allows you to:
 - Schedule EC2 instance start/stop operations using CloudWatch Events.
 - Manage the schedule and EC2 instance operations through a Ruby-based CLI.
 
-![](./.docs/image.png)
+```mermaid
+flowchart TD
+    A[User - Command Line Interface] -->|Configure CloudWatch Events for each EC2 Instance| B[CloudWatch Events]
+    B -->|Trigger Event based on Schedule and Instance Name| C[Lambda Function]
+    C -->|Executes Script based on Condition| D{Start or Stop EC2 Instance}
+    D -->|Start| E[Start EC2 Instance]
+    D -->|Stop| F[Stop EC2 Instance]
+
+    subgraph AWS
+      E
+      F
+      G[CloudWatch Logs] --> C
+    end
+    
+    A -->|Monitor Logs| G
+    B --> G
+    
+    style A fill:#f96,stroke:#333,stroke-width:2px;
+    style D fill:#ff9,stroke:#333,stroke-width:2px;
+    style E fill:#bbf,stroke:#333,stroke-width:2px;
+    style F fill:#bbf,stroke:#333,stroke-width:2px;
+    style C fill:#bbf,stroke:#333,stroke-width:2px;
+    style G fill:#f66,stroke:#333,stroke-width:2px;
+```
 
 ## Features
 
