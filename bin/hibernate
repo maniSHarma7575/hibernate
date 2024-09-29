@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require_relative '../lib/hibernate/lambda_setup'
+require_relative '../lib/hibernate/ec2_manager'
+
+# Define the command-line interface
+class HibernateCLI
+  def self.run
+    options = {}
+    OptionParser.new do |parser|
+      parser.banner = "Usage: hibernate [command] [options]"
+
+      parser.on('setup', 'Create the Lambda function') do
+        create_lambda_function
+      end
+
+      parser.on('<INSTANCE_NAME> <START_CRON> <STOP_CRON>', 'Schedule EC2 instance management') do |instance_name, start_cron, stop_cron|
+        manage_ec2(instance_name, start_cron, stop_cron)
+      end
+    end.parse!
+
+    if ARGV.empty?
+      puts "Please provide a command."
+      puts
+      puts options
+      exit
+    end
+  end
+
+  def self.create_lambda_function
+    LambdaSetup.new.run
+  end
+
+  def self.manage_ec2(instance_name, start_cron, stop_cron)
+    ec2_manager = EC2Manager.new(instance_name, start_cron, stop_cron)
+    ec2_manager.create_event_rule
+  end
+end
+
+HibernateCLI.run
