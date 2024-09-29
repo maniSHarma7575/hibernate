@@ -110,7 +110,7 @@ This command will:
 Use the following command to manage EC2 instances with scheduled start/stop times:
 
 ```bash
-bin/hibernate node --in=<instance_name> --start_instance="cron(34 16 * * ? *)" --stop_instance="cron(0 22 * * ? *)"
+bin/hibernate node --in=<instance_name> --start_instance="34 16 * * ? *" --stop_instance="0 22 * * ? *"
 ```
 
 - `--in=<instance_name>`: The EC2 instance name tag.
@@ -120,7 +120,7 @@ bin/hibernate node --in=<instance_name> --start_instance="cron(34 16 * * ? *)" -
 Example:
 
 ```bash
-bin/hibernate node --in=my-instance --start_instance="cron(34 16 * * ? *)" --stop_instance="cron(0 22 * * ? *)"
+bin/hibernate node --in=my-instance --start_instance="34 16 * * ? *" --stop_instance="0 22 * * ? *"
 ```
 
 This schedules the instance to start at 4:34 PM UTC and stop at 10:00 PM UTC.
