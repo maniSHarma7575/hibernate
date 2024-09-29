@@ -47,11 +47,12 @@ class EC2Manager
   def create_start_rule
     lambda_function_arn = construct_lambda_function_arn
 
+    p "cron(#{@start_cron})"
     @events_client.put_rule({
       name: "StartInstanceRule-#{@instance_id}",
       schedule_expression: "cron(#{@start_cron})",
       state: 'ENABLED',
-      description: "Rule to start EC2 instance #{@instance_id} (Name: #{@instance_name}) at specified time",
+      description: "Rule to start EC2 instance #{@instance_id} (Name: #{@instance_name}) at specified time: cron(#{@start_cron})",
     })
 
     @events_client.put_targets({
@@ -73,7 +74,7 @@ class EC2Manager
       name: "StopInstanceRule-#{@instance_id}",
       schedule_expression: "cron(#{@stop_cron})",
       state: 'ENABLED',
-      description: "Rule to stop EC2 instance #{@instance_id} (Name: #{@instance_name}) at specified time",
+      description: "Rule to stop EC2 instance #{@instance_id} (Name: #{@instance_name}) at specified time: cron(#{@stop_cron})",
     })
 
     @events_client.put_targets({

@@ -3,6 +3,7 @@ require 'aws-sdk-iam'   # For creating the IAM role and policy
 require 'zip'
 require 'dotenv/load'   # Automatically loads environment variables from .env
 require 'fileutils'
+require 'pry'
 
 class LambdaSetup
   def initialize
@@ -23,8 +24,13 @@ class LambdaSetup
     FileUtils.rm_f(@lambda_zip)  # Remove any existing zip file
 
     Zip::File.open(@lambda_zip, Zip::File::CREATE) do |zip|
-      Dir[File.join(dir, '**', '**')].each do |file|
-        zip.add(file.sub(dir + '/', ''), file)
+      Dir.glob(File.join('lib', 'hibernate',dir, '**', '*')).each do |file|
+        next if File.directory?(file)
+        zip_path = File.basename(file)
+        puts "Adding #{file} as #{zip_path}"
+        File.open(file, 'rb') do |io|
+          zip.add(zip_path, io)
+        end
       end
     end
 
