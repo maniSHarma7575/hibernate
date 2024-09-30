@@ -1,21 +1,20 @@
 # my_gem.gemspec
+require_relative 'lib/hibernate/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "hibernate"  # Name of the gem
-  spec.version       = "0.1.0"        # Initial version
-  spec.summary       = "Manage EC2 instances with Lambda functions"  # Short description
-  spec.description   = "A Ruby gem to automate the management of EC2 instances using AWS Lambda."  # Long description
-  spec.authors       = ["Your Name"]   # Author(s)
-  spec.email         = ["youremail@example.com"]  # Author's email
-  spec.homepage      = "https://github.com/yourusername/ec2_manager"  # Homepage URL
-  spec.license       = "MIT"           # License type
+  spec.name          = "hibernate"
+  spec.version       = Hibernate::VERSION
+  spec.summary       = "Automating the shutdown and start of our EC2 instances"
+  spec.description   = "A Ruby gem to automate the shutdown and start of our EC2 instances"
+  spec.authors       = ["Manish Sharma"]
+  spec.email         = ["sharma.manish7575@gmail.com"]
+  spec.homepage      = "https://github.com/maniSHarma7575/hibernate"
+  spec.license       = "MIT"
 
-  # Specify the files to include in the gem package
-  spec.files         = Dir["lib/**/*.rb"] + Dir["README.md"]  # Include all Ruby files in lib and the README
+  spec.files         = Dir["lib/**/*.rb"]
 
-  # Specify executables (optional)
-  spec.executables   = ["hibernate"]   # Name of the executable
-  spec.require_paths  = ["lib"]        # Load paths
+  spec.executables   = ["hibernate"]
+  spec.require_paths  = ["lib"]
 
   # Specify runtime dependencies
   spec.add_dependency "aws-sdk-ec2"
@@ -27,4 +26,10 @@ Gem::Specification.new do |spec|
   # Specify development dependencies (optional)
   spec.add_development_dependency "rspec"
   spec.add_development_dependency "rubocop"
+
+  spec.metadata = {
+    "source_code_uri" => "https://github.com/maniSHarma7575/hibernate",
+    "homepage_uri"    => "https://github.com/maniSHarma7575/hibernate",
+    "bug_tracker_uri" => "https://github.com/maniSHarma7575/hibernate/issues"
+  }
 end

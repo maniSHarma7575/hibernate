@@ -31,6 +31,18 @@ class CloudWatchEventManager
     )
   end
 
+  def remove_start_rule
+    rule_name = "StartInstanceRule-#{@instance_id}"
+    remove_rule(rule_name)
+    remove_lambda_permission(rule_name)
+  end
+
+  def remove_stop_rule
+    rule_name = "StopInstanceRule-#{@instance_id}"
+    remove_rule(rule_name)
+    remove_lambda_permission(rule_name)
+  end
+
   private
 
   def create_rule(rule_name, cron_expression, input_data, action)
@@ -70,6 +82,30 @@ class CloudWatchEventManager
       puts "Permission added for rule #{rule_name} to invoke Lambda #{@lambda_function_arn}."
     rescue Aws::Lambda::Errors::ResourceConflictException => e
       puts "Permission already exists: #{e.message}"
+    end
+  end
+
+  def remove_rule(rule_name)
+    @events_client.remove_targets({
+      rule: rule_name,
+      ids: ['1']
+    })
+    @events_client.delete_rule({
+      name: rule_name
+    })
+
+    puts "Removed rule '#{rule_name}' for instance '#{@instance_name}' (ID: #{@instance_id})."
+  end
+
+  def remove_lambda_permission(rule_name)
+    begin
+      @lambda_client.remove_permission({
+        function_name: @lambda_function_arn,
+        statement_id: "#{rule_name}-Permission"
+      })
+      puts "Removed Lambda permission for rule '#{rule_name}' to invoke Lambda #{@lambda_function_arn}."
+    rescue Aws::Lambda::Errors::ResourceNotFoundException => e
+      puts "Permission not found: #{e.message}"
     end
   end
 end

@@ -40,9 +40,15 @@ class EC2Manager
   end
 
   def create_event_rule
-    @cloudwatch_event_manager.create_start_rule(@start_cron)
-    @cloudwatch_event_manager.create_stop_rule(@stop_cron)
+    @cloudwatch_event_manager.create_start_rule(@start_cron) unless @start_cron.nil?
+    @cloudwatch_event_manager.create_stop_rule(@stop_cron) unless @stop_cron.nil?
     puts "CloudWatch Events created for instance '#{@instance_name}' (ID: #{@instance_id})."
+  end
+
+  def remove_event_rule
+    @cloudwatch_event_manager.remove_start_rule unless @start_cron.nil?
+    @cloudwatch_event_manager.remove_stop_rule unless @stop_cron.nil?
+    puts "CloudWatch Events removed for instance '#{@instance_name}' (ID: #{@instance_id})."
   end
 
   private
