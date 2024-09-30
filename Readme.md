@@ -110,14 +110,16 @@ This command will:
 Use the following command to manage EC2 instances with scheduled start/stop times:
 
 ```bash
-bin/hibernate node --in=<instance_name> --start_instance="34 16 * * ? *" --stop_instance="0 22 * * ? *"
+bin/hibernate node --in=<instance_name> --start_instance="<cron>" --stop_instance="<cron>"
 ```
 
 - `--in=<instance_name>`: The EC2 instance name tag.
-- `--start_instance=<cron>`: The cron expression for when to start the instance.
-- `--stop_instance=<cron>`: The cron expression for when to stop the instance.
+- `--start_instance=<cron>`: The cron expression for when to start the instance (optional, but either `start_instance` or `stop_instance` is required).
+- `--stop_instance=<cron>`: The cron expression for when to stop the instance (optional, but either `start_instance` or `stop_instance` is required).
 
-Example:
+**Note**: You must provide at least one of `--start_instance` or `--stop_instance`. Both can be provided, but at least one is required.
+
+#### Example:
 
 ```bash
 bin/hibernate node --in=my-instance --start_instance="34 16 * * ? *" --stop_instance="0 22 * * ? *"
@@ -125,8 +127,31 @@ bin/hibernate node --in=my-instance --start_instance="34 16 * * ? *" --stop_inst
 
 This schedules the instance to start at 4:34 PM UTC and stop at 10:00 PM UTC.
 
+### 3. Remove Scheduled Start/Stop Rules
 
-## Cron Expressions in AWS CloudWatch Events
+Use the following command to remove the scheduled start/stop rules for an EC2 instance:
+
+```bash
+bin/hibernate remove --in=<instance_name> --start_instance="<cron>" --stop_instance="<cron>"
+```
+
+- `--in=<instance_name>`: The EC2 instance name tag.
+- `--start_instance=<cron>`: The cron expression for the start rule to remove (optional, but either `start_instance` or `stop_instance` is required).
+- `--stop_instance=<cron>`: The cron expression for the stop rule to remove (optional, but either `start_instance` or `stop_instance` is required).
+
+**Note**: You must provide at least one of `--start_instance` or `--stop_instance`. Both can be provided, but at least one is required.
+
+#### Example:
+
+```bash
+bin/hibernate remove --in=my-instance --stop_instance="0 22 * * ? *"
+```
+
+This will remove the CloudWatch rule that stops the instance at 10:00 PM UTC.
+
+---
+
+### Cron Expressions in AWS CloudWatch Events
 
 CloudWatch Events uses the following format for cron expressions:
 
@@ -135,6 +160,16 @@ cron(Minutes Hours Day-of-month Month Day-of-week Year)
 ```
 
 - **Example**: `cron(34 16 * * ? *)` runs every day at 4:34 PM UTC.
+
+---
+
+### Summary of Commands
+
+- **Setup Lambda**: `bin/hibernate setup`
+- **Schedule Start/Stop**: `bin/hibernate node --in=<instance_name> --start_instance=<cron> --stop_instance=<cron>`
+- **Remove Start/Stop Rules**: `bin/hibernate remove --in=<instance_name> --start_instance=<cron> --stop_instance=<cron>`
+
+---
 
 ### Resources:
 - [AWS Cron Expressions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html)
