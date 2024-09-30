@@ -63,7 +63,6 @@ class HibernateCLI
   end
 
   def self.create_lambda_function
-    puts "I am printed here in setup"
     LambdaSetup.new.run
   end
 
@@ -74,7 +73,6 @@ class HibernateCLI
       puts "Usage: hibernate node --in=<INSTANCE_NAME> --start_instance=<START_CRON> --stop_instance=<STOP_CRON>"
       exit
     else
-      puts "I am printed here inside node"
       ec2_manager = EC2Manager.new(options[:instance_name], options[:start_cron], options[:stop_cron])
       ec2_manager.create_event_rule
     end

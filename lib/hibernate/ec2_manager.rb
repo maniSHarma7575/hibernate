@@ -10,10 +10,10 @@ class EC2Manager
     @stop_cron = stop_cron
     @aws_region = ENV['AWS_REGION']
     @account_id = ENV['ACCOUNT_ID']
-    
+
     @ec2_client = Aws::EC2::Client.new(region: @aws_region)
     @events_client = Aws::CloudWatchEvents::Client.new(region: @aws_region)
-    
+
     @lambda_function_name = "ec2_auto_shutdown_start_function"
     @instance_id = get_instance_id_by_name
   end
@@ -47,7 +47,6 @@ class EC2Manager
   def create_start_rule
     lambda_function_arn = construct_lambda_function_arn
 
-    p "cron(#{@start_cron})"
     @events_client.put_rule({
       name: "StartInstanceRule-#{@instance_id}",
       schedule_expression: "cron(#{@start_cron})",
