@@ -23,15 +23,15 @@ class HibernateCLI
     parser = OptionParser.new do |parser|
       parser.banner = "Usage: hibernate [command] [options]"
 
-      parser.on('--in=<INSTANCE_NAME>', 'Specify the EC2 instance name') do |instance_name|
+      parser.on('--instance-name=<INSTANCE_NAME>', 'Specify the EC2 instance name') do |instance_name|
         options[:instance_name] = instance_name
       end
 
-      parser.on('--start_instance=<START_CRON>', 'Specify the cron expression to start the instance') do |start_cron|
+      parser.on('--start-instance=<START_CRON>', 'Specify the cron expression to start the instance') do |start_cron|
         options[:start_cron] = start_cron
       end
 
-      parser.on('--stop_instance=<STOP_CRON>', 'Specify the cron expression to stop the instance') do |stop_cron|
+      parser.on('--stop-instance=<STOP_CRON>', 'Specify the cron expression to stop the instance') do |stop_cron|
         options[:stop_cron] = stop_cron
       end
     end
@@ -67,7 +67,7 @@ class HibernateCLI
   def self.manage_ec2_command(options)
     if options[:instance_name].nil? || (options[:start_cron].nil? && options[:stop_cron].nil?)
       puts "Please provide the instance name, and at least one cron expression (start or stop)."
-      puts "Usage: hibernate node --in=<INSTANCE_NAME> --start_instance=<START_CRON> --stop_instance=<STOP_CRON>"
+      puts "Usage: hibernate node --instance-name=<INSTANCE_NAME> --start-instance=<START_CRON> --stop-instance=<STOP_CRON>"
       exit
     else
       ec2_manager = EC2Manager.new(options[:instance_name], options[:start_cron], options[:stop_cron])
@@ -78,7 +78,7 @@ class HibernateCLI
   def self.remove_ec2_command(options)
     if options[:instance_name].nil? || (options[:start_cron].nil? && options[:stop_cron].nil?)
       puts "Please provide the instance name, and at least one cron expression (start or stop) to remove."
-      puts "Usage: hibernate remove --in=<INSTANCE_NAME> --start_instance=<START_CRON> --stop_instance=<STOP_CRON>"
+      puts "Usage: hibernate remove --instance-name=<INSTANCE_NAME> --start-instance=<START_CRON> --stop-instance=<STOP_CRON>"
       exit
     else
       ec2_manager = EC2Manager.new(options[:instance_name], options[:start_cron], options[:stop_cron])
