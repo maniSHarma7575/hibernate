@@ -132,19 +132,15 @@ This schedules the instance to start at 4:34 PM UTC and stop at 10:00 PM UTC.
 Use the following command to remove the scheduled start/stop rules for an EC2 instance:
 
 ```bash
-bin/hibernate remove --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
+bin/hibernate remove --rule=<Rule name>
 ```
 
-- `--instance-name=<instance_name>`: The EC2 instance name tag.
-- `--start-expression=<cron>`: The cron expression for the start rule to remove (optional, but either `start-expression` or `stop-expression` is required).
-- `--stop-expression=<cron>`: The cron expression for the stop rule to remove (optional, but either `start-expression` or `stop-expression` is required).
-
-**Note**: You must provide at least one of `--start-expression` or `--stop-expression`. Both can be provided, but at least one is required.
+- `--rule=<rule name>`: Specify the rule you want to delete from the list of rules.
 
 #### Example:
 
 ```bash
-bin/hibernate remove --instance-name=my-instance --stop-expression="0 22 * * ? *"
+bin/hibernate remove --rule=StopInstanceRule-i-02e532fa1faefcbeb
 ```
 
 This will remove the CloudWatch rule that stops the instance at 10:00 PM UTC.
@@ -195,7 +191,7 @@ cron(Minutes Hours Day-of-month Month Day-of-week Year)
 
 - **Setup Lambda**: `bin/hibernate setup`
 - **Schedule Start/Stop**: `bin/hibernate node --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
-- **Remove Start/Stop Rules**: `bin/hibernate remove --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
+- **Remove Start/Stop Rules**: `bin/hibernate remove --rule=<Rule name>`
 - List Scheduled Rules:
   - For all instances: `bin/hibernate list`
 	- For a specific instance: `bin/hibernate list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]`
