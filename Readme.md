@@ -1,5 +1,4 @@
 # EC2 Auto Shutdown and Start
-![](./.docs/image.png)
 
 As a software engineering team, we are working with Amazon EC2 instances on a daily basis While EC2 instances are great for running applications and services but its important to properly manage our instances to avoid unnecessary costs and resource consumption. One way to do this is by automating the shutdown and start of your EC2 instances
 
