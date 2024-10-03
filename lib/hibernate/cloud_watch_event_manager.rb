@@ -31,15 +31,8 @@ class CloudWatchEventManager
     )
   end
 
-  def remove_start_rule
-    rule_name = "StartInstanceRule-#{@instance_id}"
-    remove_rule(rule_name)
-    remove_lambda_permission(rule_name)
-  end
-
-  def remove_stop_rule
-    rule_name = "StopInstanceRule-#{@instance_id}"
-    remove_rule(rule_name)
+  def remove_rule(rule_name)
+    remove_rule_by_name(rule_name)
     remove_lambda_permission(rule_name)
   end
 
@@ -112,7 +105,7 @@ class CloudWatchEventManager
     end
   end
 
-  def remove_rule(rule_name)
+  def remove_rule_by_name(rule_name)
     @events_client.remove_targets({
       rule: rule_name,
       ids: ['1']
@@ -121,7 +114,7 @@ class CloudWatchEventManager
       name: rule_name
     })
 
-    puts "Removed rule '#{rule_name}' for instance '#{@instance_name}' (ID: #{@instance_id})."
+    puts "Removed rule '#{rule_name}'"
   end
 
   def remove_lambda_permission(rule_name)

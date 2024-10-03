@@ -45,6 +45,10 @@ class HibernateCLI
       parser.on('--stop-instance=<true/false>', 'Filter stop rules') do |stop_instance|
         options[:stop_instance] = stop_instance == 'true'
       end
+
+      parser.on('--rule=<RULE Name>', 'Specify the rule name to remove from the list') do |rule_name|
+        options[:rule_name] = rule_name
+      end
     end
 
     begin
@@ -89,13 +93,13 @@ class HibernateCLI
   end
 
   def self.remove_ec2_command(options)
-    if options[:instance_name].nil? || (options[:start_cron].nil? && options[:stop_cron].nil?)
-      puts "Please provide the instance name, and at least one cron expression (start or stop) to remove."
-      puts "Usage: hibernate remove --instance-name=<INSTANCE_NAME> --start-expression=<START_CRON> --stop-expression=<STOP_CRON>"
+    if options[:rule_name].nil?
+      puts "Please provide the rule name to remove."
+      puts "Usage: hibernate remove --rule=<RULE NAME>"
       exit
     else
       ec2_manager = EC2Manager.new(options[:instance_name])
-      ec2_manager.remove_event_rule(options[:start_cron], options[:stop_cron])
+      ec2_manager.remove_event_rule(options[:rule_name])
     end
   end
 
