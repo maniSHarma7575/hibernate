@@ -4,10 +4,8 @@ require 'json'
 require_relative 'cloud_watch_event_manager' # Adjust the path to where the new class is located
 
 class EC2Manager
-  def initialize(instance_name, start_cron, stop_cron)
+  def initialize(instance_name = nil)
     @instance_name = instance_name
-    @start_cron = start_cron
-    @stop_cron = stop_cron
     @aws_region = ENV['AWS_REGION']
     @account_id = ENV['ACCOUNT_ID']
 
@@ -16,7 +14,7 @@ class EC2Manager
 
     @lambda_function_name = "ec2_auto_shutdown_start_function"
     @lambda_function_arn = construct_lambda_function_arn
-    @instance_id = get_instance_id_by_name
+    @instance_id = get_instance_id_by_name unless @instance_name.nil?
 
     @cloudwatch_event_manager = CloudWatchEventManager.new(@events_client, @instance_id, @instance_name, @lambda_function_arn)
   end
@@ -39,16 +37,21 @@ class EC2Manager
     instance_id
   end
 
-  def create_event_rule
-    @cloudwatch_event_manager.create_start_rule(@start_cron) unless @start_cron.nil?
-    @cloudwatch_event_manager.create_stop_rule(@stop_cron) unless @stop_cron.nil?
+  def create_event_rule(start_cron, stop_cron)
+    @cloudwatch_event_manager.create_start_rule(start_cron) unless start_cron.nil?
+    @cloudwatch_event_manager.create_stop_rule(stop_cron) unless stop_cron.nil?
     puts "CloudWatch Events created for instance '#{@instance_name}' (ID: #{@instance_id})."
   end
 
-  def remove_event_rule
-    @cloudwatch_event_manager.remove_start_rule unless @start_cron.nil?
-    @cloudwatch_event_manager.remove_stop_rule unless @stop_cron.nil?
+  def remove_event_rule(start_cron, stop_cron)
+    @cloudwatch_event_manager.remove_start_rule unless start_cron.nil?
+    @cloudwatch_event_manager.remove_stop_rule unless stop_cron.nil?
     puts "CloudWatch Events removed for instance '#{@instance_name}' (ID: #{@instance_id})."
+  end
+
+  def list_event_rules(options)
+    options[:instance_id] = @instance_id unless @instance_id.nil?
+    @cloudwatch_event_manager.list_event_rules(options)
   end
 
   private
