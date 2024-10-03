@@ -18,6 +18,9 @@ class HibernateCLI
     elsif ARGV.include?('remove')
       command = :remove_ec2
       ARGV.delete('remove')
+    elsif ARGV.include?('list')
+      command = :list_ec2
+      ARGV.delete('list')
     end
 
     parser = OptionParser.new do |parser|
@@ -27,12 +30,20 @@ class HibernateCLI
         options[:instance_name] = instance_name
       end
 
-      parser.on('--start-instance=<START_CRON>', 'Specify the cron expression to start the instance') do |start_cron|
+      parser.on('--start-expression=<START_CRON>', 'Specify the cron expression to start the instance') do |start_cron|
         options[:start_cron] = start_cron
       end
 
-      parser.on('--stop-instance=<STOP_CRON>', 'Specify the cron expression to stop the instance') do |stop_cron|
+      parser.on('--stop-expression=<STOP_CRON>', 'Specify the cron expression to stop the instance') do |stop_cron|
         options[:stop_cron] = stop_cron
+      end
+
+      parser.on('--start-instance=<true/false>', 'Filter start rules') do |start_instance|
+        options[:start_instance] = start_instance == 'true'
+      end
+
+      parser.on('--stop-instance=<true/false>', 'Filter stop rules') do |stop_instance|
+        options[:stop_instance] = stop_instance == 'true'
       end
     end
 
@@ -57,6 +68,8 @@ class HibernateCLI
       manage_ec2_command(options)
     when :remove_ec2
       remove_ec2_command(options)
+    when :list_ec2
+      list_ec2_command(options)
     end
   end
 
@@ -67,23 +80,28 @@ class HibernateCLI
   def self.manage_ec2_command(options)
     if options[:instance_name].nil? || (options[:start_cron].nil? && options[:stop_cron].nil?)
       puts "Please provide the instance name, and at least one cron expression (start or stop)."
-      puts "Usage: hibernate node --instance-name=<INSTANCE_NAME> --start-instance=<START_CRON> --stop-instance=<STOP_CRON>"
+      puts "Usage: hibernate node --instance-name=<INSTANCE_NAME> --start-expression=<START_CRON> --stop-expression=<STOP_CRON>"
       exit
     else
-      ec2_manager = EC2Manager.new(options[:instance_name], options[:start_cron], options[:stop_cron])
-      ec2_manager.create_event_rule
+      ec2_manager = EC2Manager.new(options[:instance_name])
+      ec2_manager.create_event_rule(options[:start_cron], options[:stop_cron])
     end
   end
 
   def self.remove_ec2_command(options)
     if options[:instance_name].nil? || (options[:start_cron].nil? && options[:stop_cron].nil?)
       puts "Please provide the instance name, and at least one cron expression (start or stop) to remove."
-      puts "Usage: hibernate remove --instance-name=<INSTANCE_NAME> --start-instance=<START_CRON> --stop-instance=<STOP_CRON>"
+      puts "Usage: hibernate remove --instance-name=<INSTANCE_NAME> --start-expression=<START_CRON> --stop-expression=<STOP_CRON>"
       exit
     else
-      ec2_manager = EC2Manager.new(options[:instance_name], options[:start_cron], options[:stop_cron])
-      ec2_manager.remove_event_rule
+      ec2_manager = EC2Manager.new(options[:instance_name])
+      ec2_manager.remove_event_rule(options[:start_cron], options[:stop_cron])
     end
+  end
+
+  def self.list_ec2_command(options)
+    ec2_manager = EC2Manager.new(options[:instance_name])
+    ec2_manager.list_event_rules(options)
   end
 end
 

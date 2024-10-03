@@ -3,7 +3,7 @@ require 'json'
 require 'dotenv/load'
 
 class CloudWatchEventManager
-  def initialize(events_client, instance_id, instance_name, lambda_function_arn)
+  def initialize(events_client, instance_id = nil, instance_name = nil, lambda_function_arn)
     @events_client = events_client
     @instance_id = instance_id
     @instance_name = instance_name
@@ -41,6 +41,33 @@ class CloudWatchEventManager
     rule_name = "StopInstanceRule-#{@instance_id}"
     remove_rule(rule_name)
     remove_lambda_permission(rule_name)
+  end
+
+  def list_event_rules(options)
+    next_token = nil
+
+    column_widths = {
+      rule_name: 40,
+      instance_id: 22,
+      schedule: 30,
+      state: 10,
+      action: 10
+    }
+
+    print_header(column_widths)
+
+    loop do
+      response = @events_client.list_rules(next_token: next_token)
+
+      response.rules.each do |rule|
+        process_rule(rule, options, column_widths)
+      end
+
+      next_token = response.next_token
+      break if next_token.nil?
+    end
+
+    print_footer(column_widths)
   end
 
   private
@@ -107,5 +134,53 @@ class CloudWatchEventManager
     rescue Aws::Lambda::Errors::ResourceNotFoundException => e
       puts "Permission not found: #{e.message}"
     end
+  end
+
+  def print_header(column_widths)
+    total_width = column_widths.values.sum + 8
+    puts "-" * total_width
+    puts "| #{'Rule Name'.ljust(column_widths[:rule_name])} | " \
+         "#{ 'Instance ID'.ljust(column_widths[:instance_id])} | " \
+         "#{ 'Schedule (UTC)'.ljust(column_widths[:schedule])} | " \
+         "#{ 'State'.ljust(column_widths[:state])} | " \
+         "#{ 'Action'.ljust(column_widths[:action])} |"
+    puts "-" * total_width
+  end
+
+  def print_footer(column_widths)
+    total_width = column_widths.values.sum + 8
+    puts '-' * total_width
+  end
+
+  def process_rule(rule, options, column_widths)
+    targets = @events_client.list_targets_by_rule(rule: rule.name).targets
+    target = targets.find { |t| t.arn == @lambda_function_arn }
+
+    return unless target
+
+    input = JSON.parse(target.input)
+    action = input['action']
+    rule_instance_id = input['instance_id']
+
+    if matches_criteria?(rule_instance_id, action, options)
+      print_rule(rule, rule_instance_id, action, column_widths)
+    end
+  end
+
+  def matches_criteria?(rule_instance_id, action, options)
+    instance_id_match = options[:instance_id].nil? || options[:instance_id] == rule_instance_id
+    action_match = (options[:start_instance] && action == 'start') ||
+                   (options[:stop_instance] && action == 'stop') ||
+                   (options[:start_instance].nil? && options[:stop_instance].nil?)
+
+    instance_id_match && action_match
+  end
+
+  def print_rule(rule, rule_instance_id, action, column_widths)
+    puts "| #{rule.name.ljust(column_widths[:rule_name])} | " \
+         "#{rule_instance_id.ljust(column_widths[:instance_id])} | " \
+         "#{rule.schedule_expression.ljust(column_widths[:schedule])} | " \
+         "#{rule.state.ljust(column_widths[:state])} | " \
+         "#{action.capitalize.ljust(column_widths[:action])} |"
   end
 end

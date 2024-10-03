@@ -110,19 +110,19 @@ This command will:
 Use the following command to manage EC2 instances with scheduled start/stop times:
 
 ```bash
-bin/hibernate node --instance-name=<instance_name> --start-instance="<cron>" --stop-instance="<cron>"
+bin/hibernate node --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
 ```
 
 - `--instance-name=<instance_name>`: The EC2 instance name tag.
-- `--start-instance=<cron>`: The cron expression for when to start the instance (optional, but either `start-instance` or `stop-instance` is required).
-- `--stop-instance=<cron>`: The cron expression for when to stop the instance (optional, but either `start-instance` or `stop-instance` is required).
+- `--start-expression=<cron>`: The cron expression for when to start the instance (optional, but either `start-expression` or `stop-expression` is required).
+- `--stop-expression=<cron>`: The cron expression for when to stop the instance (optional, but either `start-expression` or `stop-expression` is required).
 
-**Note**: You must provide at least one of `--start-instance` or `--stop-instance`. Both can be provided, but at least one is required.
+**Note**: You must provide at least one of `--start-expression` or `--stop-expression`. Both can be provided, but at least one is required.
 
 #### Example:
 
 ```bash
-bin/hibernate node --instance-name=my-instance --start-instance="34 16 * * ? *" --stop-instance="0 22 * * ? *"
+bin/hibernate node --instance-name=my-instance --start-expression="34 16 * * ? *" --stop-expression="0 22 * * ? *"
 ```
 
 This schedules the instance to start at 4:34 PM UTC and stop at 10:00 PM UTC.
@@ -132,22 +132,50 @@ This schedules the instance to start at 4:34 PM UTC and stop at 10:00 PM UTC.
 Use the following command to remove the scheduled start/stop rules for an EC2 instance:
 
 ```bash
-bin/hibernate remove --instance-name=<instance_name> --start-instance="<cron>" --stop-instance="<cron>"
+bin/hibernate remove --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
 ```
 
 - `--instance-name=<instance_name>`: The EC2 instance name tag.
-- `--start-instance=<cron>`: The cron expression for the start rule to remove (optional, but either `start-instance` or `stop-instance` is required).
-- `--stop-instance=<cron>`: The cron expression for the stop rule to remove (optional, but either `start-instance` or `stop-instance` is required).
+- `--start-expression=<cron>`: The cron expression for the start rule to remove (optional, but either `start-expression` or `stop-expression` is required).
+- `--stop-expression=<cron>`: The cron expression for the stop rule to remove (optional, but either `start-expression` or `stop-expression` is required).
 
-**Note**: You must provide at least one of `--start-instance` or `--stop-instance`. Both can be provided, but at least one is required.
+**Note**: You must provide at least one of `--start-expression` or `--stop-expression`. Both can be provided, but at least one is required.
 
 #### Example:
 
 ```bash
-bin/hibernate remove --instance-name=my-instance --stop-instance="0 22 * * ? *"
+bin/hibernate remove --instance-name=my-instance --stop-expression="0 22 * * ? *"
 ```
 
 This will remove the CloudWatch rule that stops the instance at 10:00 PM UTC.
+
+### 4. List Scheduled Start/Stop Rules
+
+To list all scheduled start/stop rules for all EC2 instances, you can simply run:
+
+```bash
+bin/hibernate list
+```
+
+To list scheduled rules for a specific EC2 instance, use the following command:
+
+```bash
+bin/hibernate list --instance-name=<instance_name> [--start-instance=true] [--stop-instance=true]
+```
+
+Parameters:
+
+-	--instance-name=<instance_name>: The name tag of the EC2 instance whose rules you want to list (optional).
+-	--start-instance=true: (Optional) Include this flag to list only the start rules.
+- --stop-instance=true: (Optional) Include this flag to list only the stop rules.
+
+Example:
+
+```
+bin/hibernate list --instance-name=my-instance --start-instance=true
+```
+
+This command lists all scheduled start rules for the specified instance.
 
 ---
 
@@ -166,8 +194,11 @@ cron(Minutes Hours Day-of-month Month Day-of-week Year)
 ### Summary of Commands
 
 - **Setup Lambda**: `bin/hibernate setup`
-- **Schedule Start/Stop**: `bin/hibernate node --instance-name=<instance_name> --start-instance=<cron> --stop-instance=<cron>`
-- **Remove Start/Stop Rules**: `bin/hibernate remove --instance-name=<instance_name> --start-instance=<cron> --stop-instance=<cron>`
+- **Schedule Start/Stop**: `bin/hibernate node --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
+- **Remove Start/Stop Rules**: `bin/hibernate remove --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
+- List Scheduled Rules:
+  - For all instances: `bin/hibernate list`
+	- For a specific instance: `bin/hibernate list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]`
 
 ---
 
