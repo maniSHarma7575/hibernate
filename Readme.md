@@ -106,73 +106,96 @@ This command will:
 
 ### 2. Manage EC2 Instances with Scheduled Start/Stop
 
-Use the following command to manage EC2 instances with scheduled start/stop times:
+Use the following command to create or update rules for EC2 instances with scheduled start/stop times:
 
 ```bash
-bin/hibernate node --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
+bin/hibernate rule --create --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
 ```
 
 - `--instance-name=<instance_name>`: The EC2 instance name tag.
-- `--start-expression=<cron>`: The cron expression for when to start the instance (optional, but either `start-expression` or `stop-expression` is required).
-- `--stop-expression=<cron>`: The cron expression for when to stop the instance (optional, but either `start-expression` or `stop-expression` is required).
+- `--start-expression=<cron>`: The cron expression for when to start the instance.
+- `--stop-expression=<cron>`: The cron expression for when to stop the instance.
 
-**Note**: You must provide at least one of `--start-expression` or `--stop-expression`. Both can be provided, but at least one is required.
-
-#### Example:
-
-```bash
-bin/hibernate node --instance-name=my-instance --start-expression="34 16 * * ? *" --stop-expression="0 22 * * ? *"
-```
-
-This schedules the instance to start at 4:34 PM UTC and stop at 10:00 PM UTC.
-
-### 3. Remove Scheduled Start/Stop Rules
-
-Use the following command to remove the scheduled start/stop rules for an EC2 instance:
-
-```bash
-bin/hibernate remove --rule=<Rule name>
-```
-
-- `--rule=<rule name>`: Specify the rule you want to delete from the list of rules.
+Both `--start-expression` and `--stop-expression` are optional, but at least one must be provided.
 
 #### Example:
 
 ```bash
-bin/hibernate remove --rule=StopInstanceRule-i-02e532fa1faefcbeb
+bin/hibernate rule --create --instance-name="hibernate" --start-expression="55 9 * * ? *" --stop-expression="50 9 * * ? *"
 ```
 
-This will remove the CloudWatch rule that stops the instance at 10:00 PM UTC.
+This schedules the instance named "hibernate" to start at 9:55 AM UTC and stop at 9:50 AM UTC.
 
-### 4. List Scheduled Start/Stop Rules
+### 3. List Scheduled Start/Stop Rules
 
-To list all scheduled start/stop rules for all EC2 instances, you can simply run:
+To list all scheduled start/stop rules for all EC2 instances:
 
 ```bash
-bin/hibernate list
+bin/hibernate rule --list
 ```
 
-To list scheduled rules for a specific EC2 instance, use the following command:
+To list rules for a specific EC2 instance or filter by start/stop rules:
 
 ```bash
-bin/hibernate list --instance-name=<instance_name> [--start-instance=true] [--stop-instance=true]
+bin/hibernate rule --list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]
 ```
 
 Parameters:
+- `--instance-name=<instance_name>`: The name tag of the EC2 instance whose rules you want to list (optional).
+- `--start-instance=true`: (Optional) Include this flag to list only the start rules.
+- `--stop-instance=true`: (Optional) Include this flag to list only the stop rules.
 
--	--instance-name=<instance_name>: The name tag of the EC2 instance whose rules you want to list (optional).
--	--start-instance=true: (Optional) Include this flag to list only the start rules.
-- --stop-instance=true: (Optional) Include this flag to list only the stop rules.
+#### Examples:
 
-Example:
-
+```bash
+bin/hibernate rule --list --instance-name=hibernate
+bin/hibernate rule --list --start-instance=true
 ```
-bin/hibernate list --instance-name=my-instance --start-instance=true
+
+### 4. Update Existing Rules
+
+To update an existing rule:
+
+```bash
+bin/hibernate rule --update --rule=<rule_name> [--start-expression="<new_cron>"] [--stop-expression="<new_cron>"] [--state=<new_state>]
 ```
 
-This command lists all scheduled start rules for the specified instance.
+- `--rule=<rule_name>`: The name of the rule to update.
+- `--start-expression="<new_cron>"`: (Optional) The new cron expression for starting the instance.
+- `--stop-expression="<new_cron>"`: (Optional) The new cron expression for stopping the instance.
+- `--state=<new_state>`: (Optional) The new state of the rule. Use "enable" to enable the rule or "disable" to disable it.
 
----
+#### Example:
+
+```bash
+bin/hibernate rule --update --rule=StartInstanceRule-i-0ad52c31c25c659aa-9afb6fd6 --start-expression="20 12 * * ? *"
+```
+
+This updates the start rule to trigger at 12:20 PM UTC.
+
+Disable a rule:
+
+```bash
+bin/hibernate rule --update --rule=StopInstanceRule-i-0ad52c31c25c659aa-d1751fc4 --state=disable
+```
+
+### 5. Remove Scheduled Start/Stop Rules
+
+Use the following command to remove a specific rule:
+
+```bash
+bin/hibernate rule --remove --rule-name=<rule_name>
+```
+
+- `--rule-name=<rule_name>`: Specify the rule you want to delete.
+
+#### Example:
+
+```bash
+bin/hibernate rule --remove --rule-name=StartInstanceRule-i-0ad52c31c25c659aa-b0716de3
+```
+
+This will remove the specified CloudWatch rule.
 
 ### Cron Expressions in AWS CloudWatch Events
 
@@ -182,18 +205,15 @@ CloudWatch Events uses the following format for cron expressions:
 cron(Minutes Hours Day-of-month Month Day-of-week Year)
 ```
 
-- **Example**: `cron(34 16 * * ? *)` runs every day at 4:34 PM UTC.
-
----
+- **Example**: `cron(55 9 * * ? *)` runs every day at 9:55 AM UTC.
 
 ### Summary of Commands
 
 - **Setup Lambda**: `bin/hibernate setup`
-- **Schedule Start/Stop**: `bin/hibernate node --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
-- **Remove Start/Stop Rules**: `bin/hibernate remove --rule=<Rule name>`
-- List Scheduled Rules:
-  - For all instances: `bin/hibernate list`
-	- For a specific instance: `bin/hibernate list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]`
+- **Create/Update Rule**: `bin/hibernate rule --create --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
+- **List Rules**: `bin/hibernate rule --list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]`
+- **Update Rule**: `bin/hibernate rule --update --rule=<rule_name> [--start-expression=<new_cron>] [--stop-expression=<new_cron>] [--state=<new_state>]`
+- **Remove Rule**: `bin/hibernate rule --remove --rule-name=<rule_name>`
 
 ---
 

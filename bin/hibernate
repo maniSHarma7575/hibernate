@@ -12,15 +12,9 @@ class HibernateCLI
     if ARGV.include?('setup')
       command = :setup
       ARGV.delete('setup')
-    elsif ARGV.include?('node')
+    elsif ARGV.include?('rule')
       command = :manage_ec2
-      ARGV.delete('node')
-    elsif ARGV.include?('remove')
-      command = :remove_ec2
-      ARGV.delete('remove')
-    elsif ARGV.include?('list')
-      command = :list_ec2
-      ARGV.delete('list')
+      ARGV.delete('rule')
     end
 
     parser = OptionParser.new do |parser|
@@ -46,8 +40,28 @@ class HibernateCLI
         options[:stop_instance] = stop_instance == 'true'
       end
 
-      parser.on('--rule=<RULE Name>', 'Specify the rule name to remove from the list') do |rule_name|
+      parser.on('--rule-name=<RULE Name>', 'Specify the rule name to remove or update') do |rule_name|
         options[:rule_name] = rule_name
+      end
+
+      parser.on('--update', 'Update an existing rule') do
+        options[:update] = true
+      end
+
+      parser.on('--remove', 'Remove an existing rule') do
+        options[:remove] = true
+      end
+
+      parser.on('--create', 'Create a new rule') do
+        options[:create] = true
+      end
+
+      parser.on('--list', 'List rules') do
+        options[:list] = true
+      end
+
+      parser.on('--state=<enable/disable>', 'Set rule state to either enable or disable') do |state|
+        options[:state] = state
       end
     end
 
@@ -69,11 +83,15 @@ class HibernateCLI
     when :setup
       create_lambda_function
     when :manage_ec2
-      manage_ec2_command(options)
-    when :remove_ec2
-      remove_ec2_command(options)
-    when :list_ec2
-      list_ec2_command(options)
+      if options[:update]
+        update_ec2_rule_command(options)
+      elsif options[:remove]
+        remove_ec2_rule_command(options)
+      elsif options[:create]
+        create_ec2_rule_command(options)
+      elsif options[:list]
+        list_ec2_rule_command(options)
+      end
     end
   end
 
@@ -81,10 +99,10 @@ class HibernateCLI
     LambdaSetup.new.run
   end
 
-  def self.manage_ec2_command(options)
+  def self.create_ec2_rule_command(options)
     if options[:instance_name].nil? || (options[:start_cron].nil? && options[:stop_cron].nil?)
       puts "Please provide the instance name, and at least one cron expression (start or stop)."
-      puts "Usage: hibernate node --instance-name=<INSTANCE_NAME> --start-expression=<START_CRON> --stop-expression=<STOP_CRON>"
+      puts "Usage: hibernate rule --create --instance-name=<INSTANCE_NAME> --start-expression=<START_CRON> --stop-expression=<STOP_CRON>"
       exit
     else
       ec2_manager = EC2Manager.new(options[:instance_name])
@@ -92,10 +110,10 @@ class HibernateCLI
     end
   end
 
-  def self.remove_ec2_command(options)
+  def self.remove_ec2_rule_command(options)
     if options[:rule_name].nil?
       puts "Please provide the rule name to remove."
-      puts "Usage: hibernate remove --rule=<RULE NAME>"
+      puts "Usage: hibernate rule --remove --rule-name=<RULE NAME>"
       exit
     else
       ec2_manager = EC2Manager.new(options[:instance_name])
@@ -103,9 +121,29 @@ class HibernateCLI
     end
   end
 
-  def self.list_ec2_command(options)
+  def self.list_ec2_rule_command(options)
     ec2_manager = EC2Manager.new(options[:instance_name])
     ec2_manager.list_event_rules(options)
+  end
+
+  def self.update_ec2_rule_command(options)
+    if options[:rule_name].nil?
+      puts "Please provide the rule name to update."
+      puts "Usage: hibernate rule --update --rule-name=<RULE_NAME> [--start-expression=<START_CRON>] [--stop-expression=<STOP_CRON>] [--state=<enable/disable>]"
+      exit
+    elsif options[:start_cron].nil? && options[:stop_cron].nil? && options[:state].nil?
+      puts "Please provide atleast one attribute to update."
+      puts "Usage: hibernate rule --update --rule-name=<RULE_NAME> [--start-expression=<START_CRON>] [--stop-expression=<STOP_CRON>] [--state=<enable/disable>]"
+      exit
+    else
+      ec2_manager = EC2Manager.new(options[:instance_name])
+      ec2_manager.update_event_rule(
+        rule_name: options[:rule_name],
+        start_cron: options[:start_cron],
+        stop_cron: options[:stop_cron],
+        state: options[:state]
+      )
+    end
   end
 end
 
