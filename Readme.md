@@ -69,31 +69,35 @@ flowchart TB
 
 Required IAM Permissions
 
+
 1. CloudWatch Events Permissions
 
-	- events:PutRule – To create or update CloudWatch event rules.
-	- events:ListRules – To list existing event rules.
-	- events:DescribeRule – To get details about a specific event rule.
-	- events:PutTargets – To associate targets with the CloudWatch event rules.
-	- events:RemoveTargets – To remove targets from CloudWatch event rules.
-	- events:DeleteRule – To delete an event rule.
-	- events:ListTargetsByRule – To list targets associated with a specific rule.
+	- events:PutRule: Create or update CloudWatch event rules.
+	- events:ListRules: List existing event rules.
+	- events:DescribeRule: Retrieve details about a specific event rule.
+	- events:PutTargets: Associate targets with CloudWatch event rules.
+	- events:RemoveTargets: Remove targets from CloudWatch event rules.
+	- events:DeleteRule: Delete an event rule.
+	- events:ListTargetsByRule: List targets associated with a specific rule.
 
 2. EC2 Permissions
 
-	- ec2:DescribeInstances – To retrieve information about EC2 instances.
-	- ec2:StartInstances – To start EC2 instances (if applicable).
-	- ec2:StopInstances – To stop EC2 instances (if applicable).
+	- ec2:DescribeInstances: Retrieve information about EC2 instances.
+	- ec2:StartInstances: Start EC2 instances (if applicable).
+	- ec2:StopInstances: Stop EC2 instances (if applicable).
 
 3. Lambda Permissions
 
-	- lambda:AddPermission – To allow CloudWatch Events to invoke the Lambda function.
-	- lambda:RemovePermission – To remove permissions allowing invocation of the Lambda function.
-	- lambda:InvokeFunction – To allow invocation of the specified Lambda function (if it’s needed directly).
+	- lambda:AddPermission: Allow CloudWatch Events to invoke the Lambda function.
+	- lambda:RemovePermission: Remove permissions that allow invocation of the Lambda function.
+	- lambda:InvokeFunction: Allow invocation of the specified Lambda function (if needed directly).
+	- lambda:CreateFunction: Create a new Lambda function.
+	- lambda:GetFunction: Retrieve details about a specific Lambda function.
 
 4. IAM Permissions
 
-	- iam:PassRole – If the Lambda function requires a role, this permission allows passing a role to the Lambda service.
+	- iam:GetRole: Retrieve details about a specific IAM role.
+	- iam:PassRole: Allow passing a role to the Lambda service, if required.
 
 ```json
 {
