@@ -12,28 +12,44 @@ The project allows you to:
 - Manage the schedule and EC2 instance operations through a Ruby-based CLI.
 
 ```mermaid
-flowchart TD
-    A[User - Command Line Interface] -->|Configure CloudWatch Events for each EC2 Instance| B[CloudWatch Events]
-    B -->|Trigger Event based on Schedule and Instance Name| C[Lambda Function]
-    C -->|Executes Script based on Condition| D{Start or Stop EC2 Instance}
-    D -->|Start| E[Start EC2 Instance]
-    D -->|Stop| F[Stop EC2 Instance]
+flowchart TB
+    A[User - Command Line Interface]
+    B[CloudWatch Events]
+    C[Lambda Function]
+    D{Start or Stop EC2 Instance?}
+    E[Start EC2 Instance]
+    F[Stop EC2 Instance]
+    G[CloudWatch Logs]
 
-    subgraph AWS
-      E
-      F
-      G[CloudWatch Logs] --> C
+    subgraph AWS Cloud
+        B
+        C
+        D
+        E
+        F
+        G
     end
-    
-    A -->|Monitor Logs| G
-    B --> G
-    
-    style A fill:#f96,stroke:#333,stroke-width:2px;
-    style D fill:#ff9,stroke:#333,stroke-width:2px;
-    style E fill:#bbf,stroke:#333,stroke-width:2px;
-    style F fill:#bbf,stroke:#333,stroke-width:2px;
-    style C fill:#bbf,stroke:#333,stroke-width:2px;
-    style G fill:#f66,stroke:#333,stroke-width:2px;
+
+    A -->|Configure CloudWatch Events| B
+    B -->|Trigger Event| C
+    C -->|Execute Script| D
+    D -->|Start| E
+    D -->|Stop| F
+    C -->|Log Execution| G
+    A -.->|Monitor Logs| G
+
+    classDef default fill:#f7f7f7,stroke:#2c3e50,stroke-width:2px;
+    classDef input fill:#3498db,stroke:#2c3e50,stroke-width:2px,color:#fff;
+    classDef process fill:#1abc9c,stroke:#2c3e50,stroke-width:2px,color:#fff;
+    classDef decision fill:#f39c12,stroke:#2c3e50,stroke-width:2px;
+    classDef output fill:#2ecc71,stroke:#2c3e50,stroke-width:2px,color:#fff;
+    classDef storage fill:#e74c3c,stroke:#2c3e50,stroke-width:2px,color:#fff;
+
+    class A input;
+    class B,C process;
+    class D decision;
+    class E,F output;
+    class G storage;
 ```
 
 ## Features
@@ -50,10 +66,92 @@ flowchart TD
 - **Ruby 3.x**: The project requires Ruby version 3.x. Install Ruby using a version manager like RVM or rbenv.
 - **AWS SDK for Ruby**: The project uses `aws-sdk-ec2` and `aws-sdk-cloudwatchevents` gems.
 - **IAM Permissions**: Ensure the AWS user you are using has permissions to:
-  - Manage EC2 instances.
-  - Create CloudWatch Events.
-  - Create and manage Lambda functions.
-  - Create and assign IAM roles and policies.
+
+Required IAM Permissions
+
+
+1. CloudWatch Events Permissions
+
+	- events:PutRule: Create or update CloudWatch event rules.
+	- events:ListRules: List existing event rules.
+	- events:DescribeRule: Retrieve details about a specific event rule.
+	- events:PutTargets: Associate targets with CloudWatch event rules.
+	- events:RemoveTargets: Remove targets from CloudWatch event rules.
+	- events:DeleteRule: Delete an event rule.
+	- events:ListTargetsByRule: List targets associated with a specific rule.
+
+2. EC2 Permissions
+
+	- ec2:DescribeInstances: Retrieve information about EC2 instances.
+	- ec2:StartInstances: Start EC2 instances (if applicable).
+	- ec2:StopInstances: Stop EC2 instances (if applicable).
+
+3. Lambda Permissions
+
+	- lambda:AddPermission: Allow CloudWatch Events to invoke the Lambda function.
+	- lambda:RemovePermission: Remove permissions that allow invocation of the Lambda function.
+	- lambda:InvokeFunction: Allow invocation of the specified Lambda function (if needed directly).
+	- lambda:CreateFunction: Create a new Lambda function.
+	- lambda:GetFunction: Retrieve details about a specific Lambda function.
+
+4. IAM Permissions
+
+	- iam:GetRole: Retrieve details about a specific IAM role.
+	- iam:PassRole: Allow passing a role to the Lambda service, if required.
+
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"events:PutRule",
+				"events:ListRules",
+				"events:DescribeRule",
+				"events:PutTargets",
+				"events:RemoveTargets",
+				"events:DeleteRule",
+				"events:ListTargetsByRule"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"ec2:DescribeInstances",
+				"ec2:StartInstances",
+				"ec2:StopInstances"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"lambda:AddPermission",
+				"lambda:RemovePermission",
+				"lambda:InvokeFunction",
+				"lambda:CreateFunction",
+				"lambda:GetFunction"
+			],
+			"Resource": "arn:aws:lambda:<region>:<account-id>:function:*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"iam:GetRole",
+				"iam:PassRole",
+				"lambda:GetFunction"
+			],
+			"Resource": [
+				"arn:aws:iam::<account-id>:role/<role-name>",
+				"arn:aws:iam::<account-id>:role/*",
+				"arn:aws:lambda:<region>:<account-id>:function:<function-name>"
+			]
+		}
+	]
+}
+```
 
 ---
 
