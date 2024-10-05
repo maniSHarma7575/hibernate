@@ -1,6 +1,7 @@
 require 'aws-sdk-cloudwatchevents'
 require 'json'
 require 'dotenv/load'
+require 'digest'
 
 class CloudWatchEventManager
   def initialize(events_client, instance_id = nil, instance_name = nil, lambda_function_arn)
@@ -13,21 +14,25 @@ class CloudWatchEventManager
     @lambda_client = Aws::Lambda::Client.new(region: @aws_region)
   end
 
+  attr_writer :instance_id, :instance_name
+
   def create_start_rule(cron_expression)
+    rule_name = "StartInstanceRule-#{@instance_id}-#{cron_expression_hash(cron_expression)}"
     create_rule(
-      "StartInstanceRule-#{@instance_id}",
+      rule_name,
       cron_expression,
       { instance_id: @instance_id, action: 'start' },
-      "start"
+      'start'
     )
   end
 
   def create_stop_rule(cron_expression)
+    rule_name = "StopInstanceRule-#{@instance_id}-#{cron_expression_hash(cron_expression)}"
     create_rule(
-      "StopInstanceRule-#{@instance_id}",
+      rule_name,
       cron_expression,
       { instance_id: @instance_id, action: 'stop' },
-      "stop"
+      'stop'
     )
   end
 
@@ -63,7 +68,55 @@ class CloudWatchEventManager
     print_footer(column_widths)
   end
 
+  def update_rule_state(rule_name, state)
+    state = state == 'enable' ? 'ENABLED' : 'DISABLED'
+
+    rule_details = @events_client.describe_rule({ name: rule_name })
+
+    params = {
+      name: rule_name,
+      state: state,
+      description: rule_details.description
+    }
+
+    if rule_details.schedule_expression
+      params[:schedule_expression] = rule_details.schedule_expression
+    elsif rule_details.event_pattern
+      params[:event_pattern] = rule_details.event_pattern
+    else
+      puts "No ScheduleExpression or EventPattern found for rule '#{rule_name}'."
+      exit 1
+    end
+  
+    @events_client.put_rule(params)
+  end
+
+  def get_instance_id_from_rule(rule_name)
+    response = @events_client.list_targets_by_rule({ rule: rule_name })
+    return nil if response.targets.empty?
+
+    target_input = response.targets[0].input
+    parsed_input = JSON.parse(target_input)
+    parsed_input['instance_id'] if parsed_input.key?('instance_id')
+  rescue Aws::CloudWatchEvents::Errors::ResourceNotFoundException => e
+    puts "Error fetching targets for rule: #{rule_name} - #{e.message}"
+    nil
+  end
+
+  def rule_exists?(rule_name)
+    begin
+      response = @events_client.describe_rule({ name: rule_name })
+      return true unless response.nil?
+    rescue Aws::CloudWatchEvents::Errors::ResourceNotFoundException
+      return false
+    end
+  end
+
   private
+
+  def cron_expression_hash(cron_expression)
+    Digest::SHA256.hexdigest(cron_expression)[0..7] 
+  end
 
   def create_rule(rule_name, cron_expression, input_data, action)
     @events_client.put_rule({
