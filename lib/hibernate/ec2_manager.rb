@@ -2,12 +2,14 @@ require 'aws-sdk-ec2'
 require 'dotenv/load'
 require 'json'
 require_relative 'cloud_watch_event_manager' # Adjust the path to where the new class is located
+require_relative 'config_loader'
 
 class EC2Manager
   def initialize(instance_name = nil)
     @instance_name = instance_name
-    @aws_region = ENV['AWS_REGION']
-    @account_id = ENV['ACCOUNT_ID']
+    config_loader = Hibernate::ConfigLoader.new
+    @aws_region = config_loader.aws_credentials[:region]
+    @account_id = config_loader.aws_credentials[:account_id]
 
     @ec2_client = Aws::EC2::Client.new(region: @aws_region)
     @events_client = Aws::CloudWatchEvents::Client.new(region: @aws_region)

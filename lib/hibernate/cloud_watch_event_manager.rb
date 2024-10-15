@@ -2,15 +2,17 @@ require 'aws-sdk-cloudwatchevents'
 require 'json'
 require 'dotenv/load'
 require 'digest'
+require_relative 'config_loader'
 
 class CloudWatchEventManager
   def initialize(events_client, instance_id = nil, instance_name = nil, lambda_function_arn)
+    config_loader = Hibernate::ConfigLoader.new
     @events_client = events_client
     @instance_id = instance_id
     @instance_name = instance_name
     @lambda_function_arn = lambda_function_arn
-    @aws_region = ENV['AWS_REGION']
-    @account_id = ENV['ACCOUNT_ID']
+    @aws_region = config_loader.aws_credentials[:region]
+    @account_id = config_loader.aws_credentials[:account_id]
     @lambda_client = Aws::Lambda::Client.new(region: @aws_region)
   end
 
