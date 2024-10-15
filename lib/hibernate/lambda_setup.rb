@@ -13,7 +13,12 @@ class LambdaSetup
     @lambda_role_name = "ec2-auto-shutdown-start"
     @lambda_handler = "ec2_auto_shutdown_start_function"
     @lambda_zip = "lambda_function.zip"
-    @iam_client = Aws::IAM::Client.new(region: @aws_region)
+    @iam_client = Aws::IAM::Client.new(
+      region: @aws_region,
+      access_key_id: config_loader.aws_credentials[:access_key_id],
+      secret_access_key: config_loader.aws_credentials[:secret_access_key]
+    )
+
     @lambda_client = Aws::Lambda::Client.new(
       region: @aws_region,
       access_key_id: config_loader.aws_credentials[:access_key_id],

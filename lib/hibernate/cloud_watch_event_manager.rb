@@ -13,7 +13,11 @@ class CloudWatchEventManager
     @lambda_function_arn = lambda_function_arn
     @aws_region = config_loader.aws_credentials[:region]
     @account_id = config_loader.aws_credentials[:account_id]
-    @lambda_client = Aws::Lambda::Client.new(region: @aws_region)
+    @lambda_client = Aws::Lambda::Client.new(
+      region: @aws_region,
+      access_key_id: config_loader.aws_credentials[:access_key_id],
+      secret_access_key: config_loader.aws_credentials[:secret_access_key]
+    )
   end
 
   attr_writer :instance_id, :instance_name

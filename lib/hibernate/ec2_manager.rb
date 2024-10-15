@@ -8,11 +8,24 @@ class EC2Manager
   def initialize(instance_name = nil)
     @instance_name = instance_name
     config_loader = Hibernate::ConfigLoader.new
-    @aws_region = config_loader.aws_credentials[:region]
-    @account_id = config_loader.aws_credentials[:account_id]
+    aws_credentials = config_loader.aws_credentials
 
-    @ec2_client = Aws::EC2::Client.new(region: @aws_region)
-    @events_client = Aws::CloudWatchEvents::Client.new(region: @aws_region)
+    @aws_region = aws_credentials[:region]
+    @account_id = aws_credentials[:account_id]
+    access_key_id = aws_credentials[:access_key_id]
+    secret_access_key = aws_credentials[:secret_access_key]
+
+    @ec2_client = Aws::EC2::Client.new(
+      region: @aws_region,
+      access_key_id: access_key_id,
+      secret_access_key: secret_access_key
+    )
+
+    @events_client = Aws::CloudWatchEvents::Client.new(
+      region: @aws_region,
+      access_key_id: access_key_id,
+      secret_access_key: secret_access_key
+    )
 
     @lambda_function_name = "ec2_auto_shutdown_start_function"
     @lambda_function_arn = construct_lambda_function_arn

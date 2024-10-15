@@ -174,16 +174,21 @@ bundle install
 
 ### 3. Environment Configuration
 
-Create a `.env` file at the root of your project and configure your AWS credentials:
+Create a `config.yaml` file at the root of your project and configure your AWS account details as follows:
 
-```bash
-AWS_ACCESS_KEY_ID=<your-access-key-id>
-AWS_SECRET_ACCESS_KEY=<your-secret-access-key>
-AWS_REGION=<your-aws-region>
-ACCOUNT_ID=<your-account-id>
+```yaml
+aws_accounts:
+  <account_id_1>:
+    region: us-east-1
+    credentials:
+      access_key_id: <your-access-key-id-1>
+      secret_access_key: <your-secret-access-key-1>
+  <account_id_2>:
+    region: us-west-2
+    credentials:
+      access_key_id: <your-access-key-id-2>
+      secret_access_key: <your-secret-access-key-2>
 ```
-
----
 
 ## Usage
 
@@ -194,7 +199,7 @@ The project includes a CLI to manage the setup of the Lambda function and CloudW
 Run the following command to set up the Lambda function:
 
 ```bash
-bin/hibernate setup
+bin/hibernate setup --account-id=<your_account_id>
 ```
 
 This command will:
@@ -207,9 +212,9 @@ This command will:
 Use the following command to create or update rules for EC2 instances with scheduled start/stop times:
 
 ```bash
-bin/hibernate rule --create --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
+bin/hibernate rule --create --account-id=<your_account_id> --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
 ```
-
+- `--account-id=<your_account_id>`: (Optional) The AWS account ID to use. This will default to the cached account ID if not specified.
 - `--instance-name=<instance_name>`: The EC2 instance name tag.
 - `--start-expression=<cron>`: The cron expression for when to start the instance.
 - `--stop-expression=<cron>`: The cron expression for when to stop the instance.
@@ -219,7 +224,7 @@ Both `--start-expression` and `--stop-expression` are optional, but at least one
 #### Example:
 
 ```bash
-bin/hibernate rule --create --instance-name="hibernate" --start-expression="55 9 * * ? *" --stop-expression="50 9 * * ? *"
+bin/hibernate rule --create --account-id=<your_account_id> --instance-name="hibernate" --start-expression="55 9 * * ? *" --stop-expression="50 9 * * ? *"
 ```
 
 This schedules the instance named "hibernate" to start at 9:55 AM UTC and stop at 9:50 AM UTC.
@@ -229,13 +234,13 @@ This schedules the instance named "hibernate" to start at 9:55 AM UTC and stop a
 To list all scheduled start/stop rules for all EC2 instances:
 
 ```bash
-bin/hibernate rule --list
+bin/hibernate rule --list --account-id=<your_account_id>
 ```
 
 To list rules for a specific EC2 instance or filter by start/stop rules:
 
 ```bash
-bin/hibernate rule --list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]
+bin/hibernate rule --list --account-id=<your_account_id> [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]
 ```
 
 Parameters:
@@ -246,8 +251,8 @@ Parameters:
 #### Examples:
 
 ```bash
-bin/hibernate rule --list --instance-name=hibernate
-bin/hibernate rule --list --start-instance=true
+bin/hibernate rule --list --account-id=<your_account_id> --instance-name=hibernate
+bin/hibernate rule --list --account-id=<your_account_id> --start-instance=true
 ```
 
 ### 4. Update Existing Rules
@@ -255,7 +260,7 @@ bin/hibernate rule --list --start-instance=true
 To update an existing rule:
 
 ```bash
-bin/hibernate rule --update --rule=<rule_name> [--start-expression="<new_cron>"] [--stop-expression="<new_cron>"] [--state=<new_state>]
+bin/hibernate rule --update --account-id=<your_account_id> --rule=<rule_name> [--start-expression="<new_cron>"] [--stop-expression="<new_cron>"] [--state=<new_state>]
 ```
 
 - `--rule=<rule_name>`: The name of the rule to update.
@@ -266,7 +271,7 @@ bin/hibernate rule --update --rule=<rule_name> [--start-expression="<new_cron>"]
 #### Example:
 
 ```bash
-bin/hibernate rule --update --rule=StartInstanceRule-i-0ad52c31c25c659aa-9afb6fd6 --start-expression="20 12 * * ? *"
+bin/hibernate rule --update --account-id=<your_account_id> --rule=StartInstanceRule-i-0ad52c31c25c659aa-9afb6fd6 --start-expression="20 12 * * ? *"
 ```
 
 This updates the start rule to trigger at 12:20 PM UTC.
@@ -274,7 +279,7 @@ This updates the start rule to trigger at 12:20 PM UTC.
 Disable a rule:
 
 ```bash
-bin/hibernate rule --update --rule=StopInstanceRule-i-0ad52c31c25c659aa-d1751fc4 --state=disable
+bin/hibernate rule --update --account-id=<your_account_id> --rule=StopInstanceRule-i-0ad52c31c25c659aa-d1751fc4 --state=disable
 ```
 
 ### 5. Remove Scheduled Start/Stop Rules
@@ -282,7 +287,7 @@ bin/hibernate rule --update --rule=StopInstanceRule-i-0ad52c31c25c659aa-d1751fc4
 Use the following command to remove a specific rule:
 
 ```bash
-bin/hibernate rule --remove --rule-name=<rule_name>
+bin/hibernate rule --remove --account-id=<your_account_id> --rule-name=<rule_name>
 ```
 
 - `--rule-name=<rule_name>`: Specify the rule you want to delete.
@@ -290,7 +295,7 @@ bin/hibernate rule --remove --rule-name=<rule_name>
 #### Example:
 
 ```bash
-bin/hibernate rule --remove --rule-name=StartInstanceRule-i-0ad52c31c25c659aa-b0716de3
+bin/hibernate rule --remove --account-id=<your_account_id> --rule-name=<rule_name>
 ```
 
 This will remove the specified CloudWatch rule.
@@ -307,7 +312,9 @@ cron(Minutes Hours Day-of-month Month Day-of-week Year)
 
 ### Summary of Commands
 
-- **Setup Lambda**: `bin/hibernate setup`
+Note on Account ID: The account-id will be cached once you have explicitly mentioned it in the command. For subsequent commands, you can ignore passing the account-id. If you want to override it, simply pass the account-id command line arguments again.
+
+- **Setup Lambda**: `bin/hibernate setup --account-id=<your_account_id>`
 - **Create/Update Rule**: `bin/hibernate rule --create --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
 - **List Rules**: `bin/hibernate rule --list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]`
 - **Update Rule**: `bin/hibernate rule --update --rule=<rule_name> [--start-expression=<new_cron>] [--stop-expression=<new_cron>] [--state=<new_state>]`
