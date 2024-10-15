@@ -1,21 +1,28 @@
 require 'aws-sdk-lambda'
 require 'aws-sdk-iam'
 require 'zip'
-require 'dotenv/load'
 require 'fileutils'
 require 'pry'
+require_relative 'config_loader'
 
 class LambdaSetup
   def initialize
+    config_loader = Hibernate::ConfigLoader.new
+    @aws_region = config_loader.aws_credentials[:region]
+
     @lambda_role_name = "ec2-auto-shutdown-start"
     @lambda_handler = "ec2_auto_shutdown_start_function"
     @lambda_zip = "lambda_function.zip"
-    @aws_region = ENV['AWS_REGION']
-    @iam_client = Aws::IAM::Client.new(region: @aws_region)
+    @iam_client = Aws::IAM::Client.new(
+      region: @aws_region,
+      access_key_id: config_loader.aws_credentials[:access_key_id],
+      secret_access_key: config_loader.aws_credentials[:secret_access_key]
+    )
+
     @lambda_client = Aws::Lambda::Client.new(
       region: @aws_region,
-      access_key_id: ENV['AWS_ACCESS_KEY_ID'],
-      secret_access_key: ENV['AWS_SECRET_ACCESS_KEY']
+      access_key_id: config_loader.aws_credentials[:access_key_id],
+      secret_access_key: config_loader.aws_credentials[:secret_access_key]
     )
   end
 
