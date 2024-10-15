@@ -178,13 +178,13 @@ Create a `config.yaml` file at the root of your project and configure your AWS a
 
 ```yaml
 aws_accounts:
-  account_name_1:
+  profile_name:
     account_id: "<account_id_1>"
     region: us-east-1
     credentials:
       access_key_id: ACCESS_KEY_1
       secret_access_key: SECRET_KEY_1
-  account_name_2:
+  profile_other:
     account_id:<account_id_2>
     region: us-west-2
     credentials:
