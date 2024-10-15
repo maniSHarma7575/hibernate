@@ -20,8 +20,8 @@ class HibernateCLI
     parser = OptionParser.new do |parser|
       parser.banner = "Usage: hibernate [command] [options]"
 
-      parser.on('--account-id=<ACCOUNT_ID>', 'Specify the AWS account ID') do |account_id|
-        ENV['AWS_ACCOUNT_ID'] = account_id
+      parser.on('--profile=<PROFILE_NAME>', 'Specify the profile name') do |profile|
+        ENV['AWS_PROFILE'] = profile
       end
 
       parser.on('--instance-name=<INSTANCE_NAME>', 'Specify the EC2 instance name') do |instance_name|
