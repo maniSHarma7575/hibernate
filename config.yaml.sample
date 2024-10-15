@@ -1,11 +1,12 @@
 aws_accounts:
-  # Replace <account_id_1> and <account_id_2> with your actual AWS account IDs
-  "<account_id_1>":
+  account_name_1:
+    account_id: "<account_id_1>"
     region: us-east-1
     credentials:
       access_key_id: ACCESS_KEY_1
       secret_access_key: SECRET_KEY_1
-  "<account_id_2>":
+  account_name_2:
+    account_id:<account_id_2>
     region: us-west-2
     credentials:
       access_key_id: ACCESS_KEY_2
