@@ -1,0 +1,79 @@
+/* Reset some basic elements */
+body, h1, h2, h3, p, ul {
+  margin: 0;
+  padding: 0;
+}
+
+/* Apply a modern font */
+body {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  background-color: #F6F6F6; /* Light background for better contrast */
+  color: #4E4E4E; /* Charcoal text */
+}
+
+/* Header styling */
+header {
+  background: black; /* Brown */
+  color: white;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+/* Main styling */
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Section headings */
+h2 {
+  color: #8B5A2B; /* Brown */
+  margin-bottom: 0.5rem;
+}
+
+/* Links */
+a {
+  color: #FF5733; /* Bright Orange */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* List styling */
+ul {
+  list-style: none;
+}
+
+ul li {
+  padding: 0.5rem 0;
+}
+
+/* Button styling */
+button {
+  background: #D2B48C; /* Tan */
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #FFD700; /* Gold */
+}
+
+/* Footer styling */
+footer {
+  text-align: center;
+  padding: 1rem 0;
+  background: #4E4E4E; /* Charcoal */
+  color: white;
+}
