@@ -1,154 +1,91 @@
 #!/usr/bin/env ruby
 
-require 'optparse'
-require_relative '../lib/hibernate/lambda_setup'
-require_relative '../lib/hibernate/ec2_manager'
+require 'hibernate'
 
-class HibernateCLI
-  def self.run
-    command = nil
-    options = {}
+SUB_COMMANDS = %w[setup rule].freeze
+RULE_COMMANDS = %w[create list update remove].freeze
 
-    if ARGV.include?('setup')
-      command = :setup
-      ARGV.delete('setup')
-    elsif ARGV.include?('rule')
-      command = :manage_ec2
-      ARGV.delete('rule')
+global_opts = Optimist::options do
+  version "Hibernate #{Hibernate::VERSION} (c) #{Date.today.year} Manish Sharma"
+  banner <<-USAGE
+    Automate the shutdown and start of our EC2 instances.
+
+    Usage:
+       hibernate <command> [options]
+
+    where <command> are:
+       setup        : setup the AWS IAM role and Lambda
+       rule         : Manage the schedule for start/stop of EC2 Instance.
+        - create    : Create a new rule
+        - list      : List existing rules
+        - update    : Update an existing rule
+        - remove    : Remove an existing rule
+    and [options] are:
+       these are specific to the <command>. use hibernate <command> --help to learn about [options] for that command.
+  USAGE
+  stop_on SUB_COMMANDS
+end
+
+def parse_options_for_rule(subcmd)
+  case subcmd
+  when 'create'
+    Optimist::options do
+      opt :profile, 'Specify the profile name', short: '-p', type: :string
+      opt :instance_name, 'Specify the EC2 instance name', short: '-i', type: :string
+      opt :start, 'Specify the cron expression to start the instance', short: '-s', type: :string
+      opt :stop, 'Specify the cron expression to stop the instance', short: '-e', type: :string
     end
-
-    parser = OptionParser.new do |parser|
-      parser.banner = "Usage: hibernate [command] [options]"
-
-      parser.on('--profile=<PROFILE_NAME>', 'Specify the profile name') do |profile|
-        ENV['AWS_PROFILE'] = profile
-      end
-
-      parser.on('--instance-name=<INSTANCE_NAME>', 'Specify the EC2 instance name') do |instance_name|
-        options[:instance_name] = instance_name
-      end
-
-      parser.on('--start-expression=<START_CRON>', 'Specify the cron expression to start the instance') do |start_cron|
-        options[:start_cron] = start_cron
-      end
-
-      parser.on('--stop-expression=<STOP_CRON>', 'Specify the cron expression to stop the instance') do |stop_cron|
-        options[:stop_cron] = stop_cron
-      end
-
-      parser.on('--start-instance=<true/false>', 'Filter start rules') do |start_instance|
-        options[:start_instance] = start_instance == 'true'
-      end
-
-      parser.on('--stop-instance=<true/false>', 'Filter stop rules') do |stop_instance|
-        options[:stop_instance] = stop_instance == 'true'
-      end
-
-      parser.on('--rule-name=<RULE Name>', 'Specify the rule name to remove or update') do |rule_name|
-        options[:rule_name] = rule_name
-      end
-
-      parser.on('--update', 'Update an existing rule') do
-        options[:update] = true
-      end
-
-      parser.on('--remove', 'Remove an existing rule') do
-        options[:remove] = true
-      end
-
-      parser.on('--create', 'Create a new rule') do
-        options[:create] = true
-      end
-
-      parser.on('--list', 'List rules') do
-        options[:list] = true
-      end
-
-      parser.on('--state=<enable/disable>', 'Set rule state to either enable or disable') do |state|
-        options[:state] = state
-      end
+  when 'list'
+    Optimist::options do
+      opt :profile, 'Specify the profile name', short: '-p', type: :string
+      opt :instance_name, 'Specify the EC2 instance name', short: '-i', type: :string
+      opt :start, 'List only the start action rules', short: '-s'
+      opt :stop, 'List only the stop action rules', short: '-e'
     end
-
-    begin
-      parser.parse!(ARGV)
-    rescue OptionParser::ParseError => e
-      puts e.message
-      puts parser
-      exit 1
+  when 'update'
+    Optimist::options do
+      opt :profile, 'Specify the profile name', short: '-p', type: :string
+      opt :rule, 'Specify the rule name to update', short: '-r', type: :string
+      opt :start, 'Specify the cron expression to start the instance', short: '-s', type: :string
+      opt :stop, 'Specify the cron expression to stop the instance', short: '-e', type: :string
+      opt :state, 'Set rule state to either enable or disable', short: '-a', type: :string, default: nil
     end
-
-    if command.nil?
-      puts "Please provide a command."
-      puts parser
-      exit
+  when 'remove'
+    Optimist::options do
+      opt :profile, 'Specify the profile name', short: '-p', type: :string
+      opt :instance_name, 'Specify the EC2 instance name', short: '-i', type: :string
+      opt :rule, 'Specify the rule name to remove', short: '-r', type: :string
     end
-
-    case command
-    when :setup
-      create_lambda_function
-    when :manage_ec2
-      if options[:update]
-        update_ec2_rule_command(options)
-      elsif options[:remove]
-        remove_ec2_rule_command(options)
-      elsif options[:create]
-        create_ec2_rule_command(options)
-      elsif options[:list]
-        list_ec2_rule_command(options)
-      end
-    end
-  end
-
-  def self.create_lambda_function
-    LambdaSetup.new.run
-  end
-
-  def self.create_ec2_rule_command(options)
-    if options[:instance_name].nil? || (options[:start_cron].nil? && options[:stop_cron].nil?)
-      puts "Please provide the instance name, and at least one cron expression (start or stop)."
-      puts "Usage: hibernate rule --create --instance-name=<INSTANCE_NAME> --start-expression=<START_CRON> --stop-expression=<STOP_CRON>"
-      exit
-    else
-      ec2_manager = EC2Manager.new(options[:instance_name])
-      ec2_manager.create_event_rule(options[:start_cron], options[:stop_cron])
-    end
-  end
-
-  def self.remove_ec2_rule_command(options)
-    if options[:rule_name].nil?
-      puts "Please provide the rule name to remove."
-      puts "Usage: hibernate rule --remove --rule-name=<RULE NAME>"
-      exit
-    else
-      ec2_manager = EC2Manager.new(options[:instance_name])
-      ec2_manager.remove_event_rule(options[:rule_name])
-    end
-  end
-
-  def self.list_ec2_rule_command(options)
-    ec2_manager = EC2Manager.new(options[:instance_name])
-    ec2_manager.list_event_rules(options)
-  end
-
-  def self.update_ec2_rule_command(options)
-    if options[:rule_name].nil?
-      puts "Please provide the rule name to update."
-      puts "Usage: hibernate rule --update --rule-name=<RULE_NAME> [--start-expression=<START_CRON>] [--stop-expression=<STOP_CRON>] [--state=<enable/disable>]"
-      exit
-    elsif options[:start_cron].nil? && options[:stop_cron].nil? && options[:state].nil?
-      puts "Please provide atleast one attribute to update."
-      puts "Usage: hibernate rule --update --rule-name=<RULE_NAME> [--start-expression=<START_CRON>] [--stop-expression=<STOP_CRON>] [--state=<enable/disable>]"
-      exit
-    else
-      ec2_manager = EC2Manager.new(options[:instance_name])
-      ec2_manager.update_event_rule(
-        rule_name: options[:rule_name],
-        start_cron: options[:start_cron],
-        stop_cron: options[:stop_cron],
-        state: options[:state]
-      )
-    end
+  else
+    Optimist::die "unknown subcommand #{subcmd.inspect}"
   end
 end
 
-HibernateCLI.run
+cmd = ARGV.shift # get the subcommand
+options = case cmd
+when 'setup'
+  Optimist::options do
+    opt :profile, 'Specify the profile name', short: '-p', type: :string
+  end
+when 'rule'
+  subcmd = ARGV.shift
+  unless RULE_COMMANDS.include?(subcmd)
+    Optimist::die "unknown subcommand #{subcmd.inspect}"
+  end
+  parse_options_for_rule(subcmd)
+else
+  Optimist::die "unknown command #{cmd.inspect}"
+end
+
+puts "Global options: #{global_opts.inspect}"
+puts "Subcommand: #{cmd.inspect}"
+puts "Subcommand options: #{options.inspect}"
+puts "Remaining arguments: #{ARGV.inspect}"
+
+HibernateCli.setup_profile(options[:profile])
+case cmd
+when 'setup'
+  HibernateCli.create_lambda_function
+when 'rule'
+  HibernateCli.handle_rule_subcommand(subcmd, options)
+end

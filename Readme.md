@@ -164,15 +164,7 @@ git clone [https://github.com/maniSHarma7575/hibernate.git](https://github.com/m
 cd hibernate
 ```
 
-### 2. Install Dependencies
-
-Make sure you have the required gems by running:
-
-```bash
-bundle install
-```
-
-### 3. Environment Configuration
+### 2. Environment Configuration
 
 Create a `config.yaml` file at the root of your project and configure your AWS account details as follows:
 
@@ -192,134 +184,145 @@ aws_accounts:
       secret_access_key: SECRET_KEY_2
 ```
 
+### 3. Install Dependencies
+
+Make sure you have the required gems and build the gem by running:
+
+```bash
+rake install
+```
+
+Here’s how the Usage section for the Readme.md can be structured based on your script:
+
 ## Usage
 
-The project includes a CLI to manage the setup of the Lambda function and CloudWatch Events. Here’s how you can use it:
+Automate the shutdown and start of EC2 instances using scheduled rules.
 
-### 1. Setup the Lambda Function
+### Available Commands
 
-Run the following command to set up the Lambda function:
-
-```bash
-bin/hibernate setup --profile=<profile_name>
-```
-
-This command will:
-- Create an IAM role (if it doesn't exist).
-- Create the Lambda function.
-- Attach the necessary permissions for managing EC2 instances.
-
-### 2. Manage EC2 Instances with Scheduled Start/Stop
-
-Use the following command to create or update rules for EC2 instances with scheduled start/stop times:
+- **setup**: Set up the AWS IAM role and Lambda function for managing EC2 instance schedules.
+- **rule**: Manage schedules for EC2 instance start/stop actions.
+  - **create**: Create a new start/stop schedule.
+  - **list**: List existing schedules.
+  - **update**: Update an existing schedule.
+  - **remove**: Remove an existing schedule.
 
 ```bash
-bin/hibernate rule --create --profile=<profile_name> --instance-name=<instance_name> --start-expression="<cron>" --stop-expression="<cron>"
+hibernate --help
 ```
-- `--profile=<profile_name>`: (Optional) The Profile to use from config. This will default to the default profile if not specified.
-- `--instance-name=<instance_name>`: The EC2 instance name tag.
-- `--start-expression=<cron>`: The cron expression for when to start the instance.
-- `--stop-expression=<cron>`: The cron expression for when to stop the instance.
 
-Both `--start-expression` and `--stop-expression` are optional, but at least one must be provided.
+### Command Usage
 
-#### Example:
+#### Setup Command
 
 ```bash
-bin/hibernate rule --create --profile=<profile_name> --instance-name="hibernate" --start-expression="55 9 * * ? *" --stop-expression="50 9 * * ? *"
+hibernate setup --profile <PROFILE_NAME>
 ```
 
-This schedules the instance named "hibernate" to start at 9:55 AM UTC and stop at 9:50 AM UTC.
+Options:
 
-### 3. List Scheduled Start/Stop Rules
+-	-p, --profile: Specify the AWS profile name (required).
 
-To list all scheduled start/stop rules for all EC2 instances:
+#### Rule Command
+
+**Create a Schedule**
 
 ```bash
-bin/hibernate rule --list --profile=<profile_name>
+hibernate rule create --profile <PROFILE_NAME> --instance-name <INSTANCE_NAME> --start <CRON_START> --stop <CRON_STOP>
 ```
 
-To list rules for a specific EC2 instance or filter by start/stop rules:
+Options:
+
+-	-p, --profile: Specify the AWS profile name (required).
+-	-i, --instance-name: Specify the EC2 instance name (required).
+-	-s, --start: Specify the cron expression for starting the instance (optional).
+-	-e, --stop: Specify the cron expression for stopping the instance (optional).
+
+**List Schedules**
 
 ```bash
-bin/hibernate rule --list --profile=<profile_name> [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]
+hibernate rule list --profile <PROFILE_NAME> --instance-name <INSTANCE_NAME> [--start] [--stop]
 ```
+Options:
 
-Parameters:
-- `--instance-name=<instance_name>`: The name tag of the EC2 instance whose rules you want to list (optional).
-- `--start-instance=true`: (Optional) Include this flag to list only the start rules.
-- `--stop-instance=true`: (Optional) Include this flag to list only the stop rules.
+-	-p, --profile: Specify the AWS profile name (required).
+-	-i, --instance-name: Specify the EC2 instance name (required).
+-	-s, --start: List only the start action rules (optional).
+-	-e, --stop: List only the stop action rules (optional).
 
-#### Examples:
+**Update a Schedule**
 
 ```bash
-bin/hibernate rule --list --profile=<profile_name> --instance-name=hibernate
-bin/hibernate rule --list --profile=<profile_name> --start-instance=true
+hibernate rule update --profile <PROFILE_NAME> --rule <RULE_NAME> --start <NEW_CRON_START> --stop <NEW_CRON_STOP> [--state <enable|disable>]
 ```
 
-### 4. Update Existing Rules
+Options:
 
-To update an existing rule:
+-	-p, --profile: Specify the AWS profile name (required).
+-	-r, --rule: Specify the rule name to update (required).
+-	-s, --start: Specify the new cron expression for starting the instance (optional).
+-	-e, --stop: Specify the new cron expression for stopping the instance (optional).
+-	-a, --state: Set the rule state to either enable or disable (optional).
+
+**Remove a Schedule**
 
 ```bash
-bin/hibernate rule --update --profile=<profile_name> --rule=<rule_name> [--start-expression="<new_cron>"] [--stop-expression="<new_cron>"] [--state=<new_state>]
+hibernate rule remove --profile <PROFILE_NAME> --instance-name <INSTANCE_NAME> --rule <RULE_NAME>
 ```
 
-- `--rule=<rule_name>`: The name of the rule to update.
-- `--start-expression="<new_cron>"`: (Optional) The new cron expression for starting the instance.
-- `--stop-expression="<new_cron>"`: (Optional) The new cron expression for stopping the instance.
-- `--state=<new_state>`: (Optional) The new state of the rule. Use "enable" to enable the rule or "disable" to disable it.
+Options:
 
-#### Example:
+-	-p, --profile: Specify the AWS profile name (required).
+-	-i, --instance-name: Specify the EC2 instance name (required).
+-	-r, --rule: Specify the rule name to remove (required).
+
+Examples
+
+1. Setting up the environment:
 
 ```bash
-bin/hibernate rule --update --profile=<profile_name> --rule=StartInstanceRule-i-0ad52c31c25c659aa-9afb6fd6 --start-expression="20 12 * * ? *"
+hibernate setup --profile production
 ```
 
-This updates the start rule to trigger at 12:20 PM UTC.
-
-Disable a rule:
+2. Creating a start/stop schedule for an EC2 instance:
 
 ```bash
-bin/hibernate rule --update --profile=<profile_name> --rule=StopInstanceRule-i-0ad52c31c25c659aa-d1751fc4 --state=disable
+hibernate rule create --profile production --instance-name my-ec2-instance --start "cron(0 8 * * ? *)" --stop "cron(0 18 * * ? *)"
 ```
 
-### 5. Remove Scheduled Start/Stop Rules
 
-Use the following command to remove a specific rule:
+3. Listing all schedules for an EC2 instance:
 
 ```bash
-bin/hibernate rule --remove --profile=<profile_name> --rule-name=<rule_name>
+hibernate rule list --profile production --instance-name my-ec2-instance
 ```
 
-- `--rule-name=<rule_name>`: Specify the rule you want to delete.
-
-#### Example:
+4. Updating an existing rule:
 
 ```bash
-bin/hibernate rule --remove --profile=<profile_name> --rule-name=<rule_name>
+hibernate rule update --profile production --rule my-rule --start "cron(0 7 * * ? *)" --state enable
 ```
 
-This will remove the specified CloudWatch rule.
+5. Removing a schedule:
 
-### Cron Expressions in AWS CloudWatch Events
-
-CloudWatch Events uses the following format for cron expressions:
-
-```
-cron(Minutes Hours Day-of-month Month Day-of-week Year)
+```bash
+hibernate rule remove --profile production --instance-name my-ec2-instance --rule my-rule
 ```
 
-- **Example**: `cron(55 9 * * ? *)` runs every day at 9:55 AM UTC.
+#### Shortcut Options
 
-### Summary of Commands
+You can use these shortcut flags for commonly used options:
 
-- **Setup Lambda**: `bin/hibernate setup --profile=<profile_name>`
-- **Create/Update Rule**: `bin/hibernate rule --create --instance-name=<instance_name> --start-expression=<cron> --stop-expression=<cron>`
-- **List Rules**: `bin/hibernate rule --list [--instance-name=<instance_name>] [--start-instance=true] [--stop-instance=true]`
-- **Update Rule**: `bin/hibernate rule --update --rule=<rule_name> [--start-expression=<new_cron>] [--stop-expression=<new_cron>] [--state=<new_state>]`
-- **Remove Rule**: `bin/hibernate rule --remove --rule-name=<rule_name>`
+-	-p for --profile
+-	-i for --instance-name
+-	-s for --start
+-	-e for --stop
+-	-r for --rule
+-	-a for --state
 
+```bash
+hibernate rule create -p production -i my-ec2-instance -s "cron(0 8 * * ? *)" -e "cron(0 18 * * ? *)
+```
 ---
 
 ### Resources:
