@@ -221,9 +221,10 @@ class CloudWatchEventManager
 
   def matches_criteria?(rule_instance_id, action, options)
     instance_id_match = options[:instance_id].nil? || options[:instance_id] == rule_instance_id
-    action_match = (options[:start_instance] && action == 'start') ||
-                   (options[:stop_instance] && action == 'stop') ||
-                   (options[:start_instance].nil? && options[:stop_instance].nil?)
+    action_match = (options[:start] && action == 'start') ||
+                   (options[:stop] && action == 'stop') ||
+                   (options[:start].nil? && options[:stop].nil?) ||
+                   ((!options[:start].nil? && !options[:stop].nil?) && (!options[:start] && !options[:stop]))
 
     instance_id_match && action_match
   end

@@ -2,3 +2,5 @@
 *.zip
 *.gem
 config.yaml
+pkg
+Gemfile.lock

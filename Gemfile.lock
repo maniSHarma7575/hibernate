@@ -1,3 +1,17 @@
+PATH
+  remote: .
+  specs:
+    hibernate (0.1.6)
+      aws-sdk-cloudwatch (~> 1.103)
+      aws-sdk-cloudwatchevents (~> 1.83)
+      aws-sdk-ec2 (~> 1.478)
+      aws-sdk-iam (~> 1.111)
+      aws-sdk-lambda (~> 1.136)
+      dotenv (~> 3.1)
+      json (~> 2.7)
+      optimist (~> 3.1)
+      rubyzip (~> 2.3)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -33,6 +47,7 @@ GEM
     json (2.7.2)
     language_server-protocol (3.17.0.3)
     method_source (1.1.0)
+    optimist (3.1.0)
     parallel (1.26.3)
     parser (3.3.5.0)
       ast (~> 2.4.1)
@@ -42,6 +57,7 @@ GEM
       method_source (~> 1.0)
     racc (1.8.1)
     rainbow (3.1.1)
+    rake (13.2.1)
     regexp_parser (2.9.2)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
@@ -74,23 +90,13 @@ GEM
 
 PLATFORMS
   arm64-darwin-22
-  ruby
 
 DEPENDENCIES
-  aws-sdk-cloudwatch
-  aws-sdk-cloudwatchevents
-  aws-sdk-ec2
-  aws-sdk-iam
-  aws-sdk-lambda
-  dotenv
-  json
+  hibernate!
   pry
-  rspec
-  rubocop
-  rubyzip
-
-RUBY VERSION
-   ruby 3.2.2p53
+  rake
+  rspec (~> 3.13)
+  rubocop (~> 1.66)
 
 BUNDLED WITH
    2.5.4
