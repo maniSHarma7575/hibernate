@@ -35,6 +35,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "source_code_uri" => "https://github.com/maniSHarma7575/hibernate",
+    "homepage_uri"    => "https://manisharma7575.github.io/hibernate/",
     "bug_tracker_uri" => "https://github.com/maniSHarma7575/hibernate/issues"
   }
 
