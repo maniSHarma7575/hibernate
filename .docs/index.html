@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EC2 Auto Shutdown and Start</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+</head>
+<body>
+  <header>
+      <h1>EC2 Auto Shutdown and Start</h1>
+  </header>
+  <main>
+    <section id="project-overview">
+        <h2>Project Overview</h2>
+        <p>This project automates the start and stop of AWS EC2 instances based on scheduled CloudWatch Events using an AWS Lambda function. It leverages Ruby AWS SDK for creating the Lambda function, CloudWatch Events, and EC2 instance management. You can configure the instance and schedule using the CLI.</p>
+        <div>
+            <pre class="mermaid">
+                graph TD
+                A[User - Command Line Interface]
+                B[CloudWatch Events]
+                C[Lambda Function]
+                D{Start or Stop EC2 Instance?}
+                E[Start EC2 Instance]
+                F[Stop EC2 Instance]
+                G[CloudWatch Logs]
+
+                subgraph AWS Cloud
+                    B
+                    C
+                    D
+                    E
+                    F
+                    G
+                end
+
+                A -->|Configure CloudWatch Events| B
+                B -->|Trigger Event| C
+                C -->|Execute Script| D
+                D -->|Start| E
+                D -->|Stop| F
+                C -->|Log Execution| G
+                A -.->|Monitor Logs| G
+
+                classDef default fill:#f7f7f7,stroke:#2c3e50,stroke-width:2px;
+                classDef input fill:#3498db,stroke:#2c3e50,stroke-width:2px,color:#fff;
+                classDef process fill:#1abc9c,stroke:#2c3e50,stroke-width:2px,color:#fff;
+                classDef decision fill:#f39c12,stroke:#2c3e50,stroke-width:2px;
+                classDef output fill:#2ecc71,stroke:#2c3e50,stroke-width:2px,color:#fff;
+                classDef storage fill:#e74c3c,stroke:#2c3e50,stroke-width:2px,color:#fff;
+
+                class A input;
+                class B,C process;
+                class D decision;
+                class E,F output;
+                class G storage;
+            </pre>
+        </div>
+    </section>
+
+    <section id="features">
+        <h2>Features</h2>
+        <ul>
+            <li><strong>Lambda function</strong>: Automatically manages the start and stop of EC2 instances.</li>
+            <li><strong>CloudWatch Events</strong>: Schedules based on cron expressions to run the Lambda function at specific times.</li>
+            <li><strong>CLI Interface</strong>: Easy-to-use interface for setting up the Lambda function and managing EC2 instance operations.</li>
+        </ul>
+    </section>
+
+    <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <ul>
+            <li><strong>AWS CLI</strong>: Ensure that the AWS CLI is installed and configured with access to your AWS account.</li>
+            <li><strong>Ruby 3.x</strong>: The project requires Ruby version 3.x. Install Ruby using a version manager like RVM or rbenv.</li>
+            <li><strong>AWS SDK for Ruby</strong>: The project uses <code class="language-shell">aws-sdk-ec2</code> and <code class="language-shell">aws-sdk-cloudwatchevents</code> gems.</li>
+            <li><strong>IAM Permissions</strong>: Ensure the AWS user you are using has permissions to manage CloudWatch Events, EC2, Lambda, and IAM roles.</li>
+        </ul>
+    </section>
+
+    <section id="setup-instructions">
+        <h2>Setup Instructions</h2>
+        <h3>1. Clone the Repository</h3>
+        <pre><code class="language-shell">git clone https://github.com/maniSHarma7575/hibernate.git
+cd hibernate</code></pre>
+
+        <h3>2. Environment Configuration</h3>
+        <p>Create a <code class="language-shell">config.yaml</code> file at the root of your project and configure your AWS account details as follows:</p>
+        <pre><code class="language-shell">aws_accounts:
+  profile_name:
+    account_id: "<account_id_1>"
+    region: us-east-1
+    credentials:
+      access_key_id: ACCESS_KEY_1
+      secret_access_key: SECRET_KEY_1
+  profile_other:
+    account_id: <account_id_2>
+    region: us-west-2
+    credentials:
+      access_key_id: ACCESS_KEY_2
+      secret_access_key: SECRET_KEY_2</code></pre>
+
+        <h3>3. Install Dependencies</h3>
+        <p>Make sure you have the required gems and build the gem by running:</p>
+        <pre><code class="language-shell">rake install</code></pre>
+    </section>
+
+    <section id="command-usage">
+        <h2>Command Usage</h2>
+        <p>The <code class="language-shell">hibernate</code> CLI tool provides commands for setting up the Lambda function and managing EC2 instance schedules.</p>
+
+        <h3>Setup Command</h3>
+        <pre><code class="language-shell">hibernate setup --profile &lt;PROFILE_NAME&gt;</code></pre>
+        <p><strong>Options:</strong></p>
+        <ul>
+            <li><strong>-p, --profile</strong>: Specify the AWS profile name (required).</li>
+        </ul>
+        <p><strong>Example:</strong></p>
+        <pre><code class="language-shell">hibernate setup --profile production</code></pre>
+
+        <h3>Rule Command</h3>
+        <p>Manage schedules for EC2 instance start/stop actions.</p>
+
+        <h4>Create a Schedule</h4>
+        <pre><code class="language-shell">hibernate rule create --profile &lt;PROFILE_NAME&gt; --instance-name &lt;INSTANCE_NAME&gt; --start &lt;CRON_START&gt; --stop &lt;CRON_STOP&gt;</code></pre>
+        <p><strong>Options:</strong></p>
+        <ul>
+            <li><strong>-p, --profile</strong>: Specify the AWS profile name (required).</li>
+            <li><strong>-i, --instance-name</strong>: Specify the EC2 instance name (required).</li>
+            <li><strong>-s, --start</strong>: Specify the cron expression for starting the instance (optional).</li>
+            <li><strong>-e, --stop</strong>: Specify the cron expression for stopping the instance (optional).</li>
+        </ul>
+
+        <h4>List Schedules</h4>
+        <pre><code class="language-shell">hibernate rule list --profile &lt;PROFILE_NAME&gt; --instance-name &lt;INSTANCE_NAME&gt; [--start] [--stop]</code></pre>
+        <p><strong>Options:</strong></p>
+        <ul>
+            <li><strong>-p, --profile</strong>: Specify the AWS profile name (required).</li>
+            <li><strong>-i, --instance-name</strong>: Specify the EC2 instance name (required).</li>
+            <li><strong>-s, --start</strong>: List only the start action rules (optional).</li>
+            <li><strong>-e, --stop</strong>: List only the stop action rules (optional).</li>
+        </ul>
+
+        <h4>Update a Schedule</h4>
+        <pre><code class="language-shell">hibernate rule update --profile &lt;PROFILE_NAME&gt; --rule &lt;RULE_NAME&gt; --start &lt;NEW_CRON_START&gt; --stop &lt;NEW_CRON_STOP&gt; [--state &lt;enable|disable&gt;]</code></pre>
+        <p><strong>Options:</strong></p>
+        <ul>
+            <li><strong>-p, --profile</strong>: Specify the AWS profile name (required).</li>
+            <li><strong>-r, --rule</strong>: Specify the rule name to update (required).</li>
+            <li><strong>-s, --start</strong>: Specify the new cron expression for starting the instance (optional).</li>
+            <li><strong>-e, --stop</strong>: Specify the new cron expression for stopping the instance (optional).</li>
+            <li><strong>-a, --state</strong>: Set the rule state to either enable or disable (optional).</li>
+        </ul>
+
+        <h4>Remove a Schedule</h4>
+        <pre><code class="language-shell">hibernate rule remove --profile &lt;PROFILE_NAME&gt; --instance-name &lt;INSTANCE_NAME&gt; --rule &lt;RULE_NAME&gt;</code></pre>
+        <p><strong>Options:</strong></p>
+        <ul>
+            <li><strong>-p, --profile</strong>: Specify the AWS profile name (required).</li>
+            <li><strong>-i, --instance-name</strong>: Specify the EC2 instance name (required).</li>
+            <li><strong>-r, --rule</strong>: Specify the rule name to remove (required).</li>
+        </ul>
+    </section>
+    <section id="additional-resources">
+      <h2>Additional Resources</h2>
+      <ul>
+          <li><a href="https://aws.amazon.com/documentation/lambda/">AWS Lambda Documentation</a></li>
+          <li><a href="https://aws.amazon.com/documentation/cli/">AWS CLI Documentation</a></li>
+          <li><a href="https://aws.amazon.com/documentation/ec2/">AWS EC2 Documentation</a></li>
+          <li><a href="https://rubydoc.info/gems/aws-sdk-ec2/Aws/SDK/EC2">AWS SDK for Ruby EC2 Documentation</a></li>
+          <li><a href="https://rubydoc.info/gems/aws-sdk-cloudwatchevents/Aws/SDK/CloudWatchEvents">AWS SDK for Ruby CloudWatch Events Documentation</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 Manish Sharma. All rights reserved.</p>
+  </footer>
+</body>
+</html>
