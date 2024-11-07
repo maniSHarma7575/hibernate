@@ -3,56 +3,35 @@ require 'dotenv/load'
 require 'json'
 require_relative 'cloud_watch_event_manager' # Adjust the path to where the new class is located
 require_relative 'config_loader'
+require_relative 'ec2_client'
 
 class EC2Manager
   def initialize(instance_name = nil)
     @instance_name = instance_name
-    config_loader = Hibernate::ConfigLoader.new
-    aws_credentials = config_loader.aws_credentials
+    aws_credentials = Hibernate::ConfigLoader.new.aws_credentials
 
     @aws_region = aws_credentials[:region]
     @account_id = aws_credentials[:account_id]
-    access_key_id = aws_credentials[:access_key_id]
-    secret_access_key = aws_credentials[:secret_access_key]
-
-    @ec2_client = Aws::EC2::Client.new(
-      region: @aws_region,
-      access_key_id: access_key_id,
-      secret_access_key: secret_access_key
-    )
+    @ec2_client = EC2Client.new
 
     @events_client = Aws::CloudWatchEvents::Client.new(
       region: @aws_region,
-      access_key_id: access_key_id,
-      secret_access_key: secret_access_key
+      credentials: Aws::Credentials.new(
+        aws_credentials[:access_key_id],
+        aws_credentials[:secret_access_key]
+      )
     )
 
     @lambda_function_name = "ec2_auto_shutdown_start_function"
     @lambda_function_arn = construct_lambda_function_arn
-    @instance_id = get_instance_id_by_name unless @instance_name.nil?
+    @instance_id = @instance_name ? @ec2_client.get_instance_id_by_name(@instance_name) : nil
 
-    @cloudwatch_event_manager = CloudWatchEventManager.new(@events_client, @instance_id, @instance_name, @lambda_function_arn)
+    @cloudwatch_event_manager = CloudWatchEventManager.new(
+      @events_client, @instance_id, @instance_name, @lambda_function_arn
+    )
   end
 
   attr_writer :instance_name, :instance_id
-
-  def get_instance_id_by_name
-    response = @ec2_client.describe_instances({
-      filters: [
-        { name: "tag:Name", values: [@instance_name] },
-        { name: "instance-state-name", values: ["running", "stopped"] }
-      ]
-    })
-
-    if response.reservations.empty?
-      puts "No EC2 instance found with the name '#{@instance_name}'."
-      exit 1
-    end
-
-    instance_id = response.reservations[0].instances[0].instance_id
-    puts "Found EC2 instance ID: #{instance_id} for instance name: #{@instance_name}"
-    instance_id
-  end
 
   def create_event_rule(start_cron, stop_cron)
     @cloudwatch_event_manager.create_start_rule(start_cron) unless start_cron.nil?
@@ -84,7 +63,7 @@ class EC2Manager
       exit 1
     end
 
-    instance_name = get_instance_name_by_id(target_instance_id)
+    instance_name = @ec2_client.get_instance_name_by_id(target_instance_id)
 
     @cloudwatch_event_manager.instance_id = target_instance_id
     @cloudwatch_event_manager.instance_name = instance_name
@@ -112,22 +91,5 @@ class EC2Manager
 
   def construct_lambda_function_arn
     "arn:aws:lambda:#{@aws_region}:#{@account_id}:function:#{@lambda_function_name}"
-  end
-
-  def get_instance_name_by_id(instance_id)
-    response = @ec2_client.describe_instances({
-      instance_ids: [instance_id]
-    })
-
-    if response.reservations.empty?
-      puts "No instance found with ID '#{instance_id}'."
-      return nil
-    end
-
-    instance = response.reservations[0].instances[0]
-    tags = instance.tags || []
-
-    name_tag = tags.find { |tag| tag.key == 'Name' }
-    name_tag&.value
   end
 end
