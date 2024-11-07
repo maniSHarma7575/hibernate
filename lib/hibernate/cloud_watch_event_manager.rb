@@ -3,6 +3,7 @@ require 'json'
 require 'dotenv/load'
 require 'digest'
 require_relative 'config_loader'
+require_relative 'ec2_client'
 
 class CloudWatchEventManager
   def initialize(events_client, instance_id = nil, instance_name = nil, lambda_function_arn)
@@ -18,6 +19,8 @@ class CloudWatchEventManager
       access_key_id: config_loader.aws_credentials[:access_key_id],
       secret_access_key: config_loader.aws_credentials[:secret_access_key]
     )
+
+    @ec2_client = EC2Client.new
   end
 
   attr_writer :instance_id, :instance_name
@@ -51,8 +54,9 @@ class CloudWatchEventManager
     next_token = nil
 
     column_widths = {
-      rule_name: 40,
+      rule_name: 50,
       instance_id: 22,
+      instance_name: 40,
       schedule: 30,
       state: 10,
       action: 10
@@ -193,6 +197,7 @@ class CloudWatchEventManager
     puts "-" * total_width
     puts "| #{'Rule Name'.ljust(column_widths[:rule_name])} | " \
          "#{ 'Instance ID'.ljust(column_widths[:instance_id])} | " \
+         "#{ 'Instance Name'.ljust(column_widths[:instance_name])} | " \
          "#{ 'Schedule (UTC)'.ljust(column_widths[:schedule])} | " \
          "#{ 'State'.ljust(column_widths[:state])} | " \
          "#{ 'Action'.ljust(column_widths[:action])} |"
@@ -214,8 +219,9 @@ class CloudWatchEventManager
     action = input['action']
     rule_instance_id = input['instance_id']
 
+    instance_name = @ec2_client.get_instance_name_by_id(rule_instance_id)
     if matches_criteria?(rule_instance_id, action, options)
-      print_rule(rule, rule_instance_id, action, column_widths)
+      print_rule(rule, rule_instance_id, instance_name, action, column_widths)
     end
   end
 
@@ -229,9 +235,10 @@ class CloudWatchEventManager
     instance_id_match && action_match
   end
 
-  def print_rule(rule, rule_instance_id, action, column_widths)
+  def print_rule(rule, rule_instance_id, instance_name, action, column_widths)
     puts "| #{rule.name.ljust(column_widths[:rule_name])} | " \
          "#{rule_instance_id.ljust(column_widths[:instance_id])} | " \
+         "#{instance_name.ljust(column_widths[:instance_name])} | " \
          "#{rule.schedule_expression.ljust(column_widths[:schedule])} | " \
          "#{rule.state.ljust(column_widths[:state])} | " \
          "#{action.capitalize.ljust(column_widths[:action])} |"

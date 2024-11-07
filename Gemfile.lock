@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    hibernate (0.1.7)
+    hibernate (0.1.8)
       aws-sdk-cloudwatch (~> 1.103)
       aws-sdk-cloudwatchevents (~> 1.83)
       aws-sdk-ec2 (~> 1.478)
