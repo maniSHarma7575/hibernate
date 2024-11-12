@@ -101,55 +101,58 @@ Required IAM Permissions
 
 ```json
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"events:PutRule",
-				"events:ListRules",
-				"events:DescribeRule",
-				"events:PutTargets",
-				"events:RemoveTargets",
-				"events:DeleteRule",
-				"events:ListTargetsByRule"
-			],
-			"Resource": "*"
-		},
-		{
-			"Effect": "Allow",
-			"Action": [
-				"ec2:DescribeInstances",
-				"ec2:StartInstances",
-				"ec2:StopInstances"
-			],
-			"Resource": "*"
-		},
-		{
-			"Effect": "Allow",
-			"Action": [
-				"lambda:AddPermission",
-				"lambda:RemovePermission",
-				"lambda:InvokeFunction",
-				"lambda:CreateFunction",
-				"lambda:GetFunction"
-			],
-			"Resource": "arn:aws:lambda:<region>:<account-id>:function:*"
-		},
-		{
-			"Effect": "Allow",
-			"Action": [
-				"iam:GetRole",
-				"iam:PassRole",
-				"lambda:GetFunction"
-			],
-			"Resource": [
-				"arn:aws:iam::<account-id>:role/<role-name>",
-				"arn:aws:iam::<account-id>:role/*",
-				"arn:aws:lambda:<region>:<account-id>:function:<function-name>"
-			]
-		}
-	]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "events:PutRule",
+                "events:ListRules",
+                "events:DescribeRule",
+                "events:PutTargets",
+                "events:RemoveTargets",
+                "events:DeleteRule",
+                "events:ListTargetsByRule"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeInstances",
+                "ec2:StartInstances",
+                "ec2:StopInstances"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "lambda:AddPermission",
+                "lambda:RemovePermission",
+                "lambda:InvokeFunction",
+                "lambda:CreateFunction",
+                "lambda:GetFunction"
+            ],
+            "Resource": "arn:aws:lambda:<region>:<account_id>:function:*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:CreateRole",
+                "lambda:GetFunction",
+                "iam:PutRolePolicy",
+                "iam:AttachRolePolicy"
+            ],
+            "Resource": [
+                "arn:aws:iam::<account_id>:role/ec2-auto-shutdown-start",
+                "arn:aws:iam::<account_id>:role/*",
+                "arn:aws:lambda:<region>:<account_id>:function:ec2_auto_shutdown_start_function"
+            ]
+        }
+    ]
 }
 ```
 
