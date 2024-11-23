@@ -4,6 +4,10 @@ As a software engineering team, we are working with Amazon EC2 instances on a da
 
 This project automates the start and stop of AWS EC2 instances based on scheduled CloudWatch Events using an AWS Lambda function. It leverages Ruby AWS SDK for creating the Lambda function, CloudWatch Events, and EC2 instance management. You can configure the instance and schedule using the CLI.
 
+### Watch demonstration
+
+[<img width="1440" alt="image" src="https://github.com/user-attachments/assets/84274cb6-13b2-4e12-b235-2e0a24984ecb">](https://youtu.be/a_7fglcBAxE?si=wEGlH4ZeObCrjUir)
+
 ## Project Overview
 
 The project allows you to:
