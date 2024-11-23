@@ -6,7 +6,7 @@ This project automates the start and stop of AWS EC2 instances based on schedule
 
 ### Watch demonstration
 
-[<img width="900" alt="image" src="https://github.com/user-attachments/assets/6bc07296-0dd6-436d-9a6d-7c6a8dca7f4a">]((https://youtu.be/a_7fglcBAxE?si=wEGlH4ZeObCrjUir))
+[<img width="900" alt="image" src="https://github.com/user-attachments/assets/6bc07296-0dd6-436d-9a6d-7c6a8dca7f4a">](https://youtu.be/a_7fglcBAxE?si=wEGlH4ZeObCrjUir)
 
 ## Project Overview
 
